@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 8
+names: ['Banner', 'Kugelmarker', 'NT-Detection', 'NT-Gehause', 'NT-Muffen', 'Orang-Speednetrohrchen', 'Spleiskassetten', 'Steaker']
+
+roboflow:
+  workspace: obst
+  project: nt-detection-test
+  version: 3
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/obst/nt-detection-test/dataset/3
