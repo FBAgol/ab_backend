@@ -31,4 +31,4 @@ ENV PATH="/app/.venv/bin:$PATH"
 EXPOSE 8081
 
 # Verwende Poetry, um uvicorn auszuführen
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8081"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
