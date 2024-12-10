@@ -1,12 +1,11 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import ForeignKey, LargeBinary
+from sqlalchemy import ForeignKey, LargeBinary, String
 from uuid import UUID, uuid4
 from .engine import Base
 
-
 class Company(Base):
     __tablename__ = "company"
-    company_name: Mapped[str] = mapped_column(nullable=False)
+    company_name: Mapped[str] = mapped_column(String(255), nullable=False)  # Länge hinzugefügt
 
     editors: Mapped[list["Editor"]] = relationship(
         "Editor", back_populates="company", cascade="all, delete-orphan"
@@ -16,8 +15,8 @@ class Company(Base):
 
 class Editor(Base):
     __tablename__ = "editor"
-    editor_email: Mapped[str] = mapped_column(nullable=False)
-    password: Mapped[str] = mapped_column(nullable=False)
+    editor_email: Mapped[str] = mapped_column(String(255), nullable=False)  # Länge hinzugefügt
+    password: Mapped[str] = mapped_column(String(255), nullable=False)  # Länge hinzugefügt
     company_id: Mapped[UUID] = mapped_column(ForeignKey("company.id"))
     company: Mapped["Company"] = relationship(
         "Company", back_populates="editors"
@@ -30,8 +29,8 @@ class Editor(Base):
 
 class Project(Base):
     __tablename__ = "project"
-    project_name: Mapped[str] = mapped_column(nullable=False)
-    city: Mapped[str] = mapped_column(nullable=False)
+    project_name: Mapped[str] = mapped_column(String(255), nullable=False)  # Länge hinzugefügt
+    city: Mapped[str] = mapped_column(String(255), nullable=False)  # Länge hinzugefügt
     editor_id: Mapped[int] = mapped_column(ForeignKey("editor.id"))
     editor: Mapped["Editor"] = relationship(
         "Editor", back_populates="projects"
@@ -45,7 +44,7 @@ class Project(Base):
 
 class Area(Base):
     __tablename__ = "area"
-    street: Mapped[str] = mapped_column(nullable=False)
+    street: Mapped[str] = mapped_column(String(255), nullable=False)  # Länge hinzugefügt
     project_id: Mapped[int] = mapped_column(ForeignKey("project.id"))
     project: Mapped["Project"] = relationship(
         "Project", back_populates="areas"

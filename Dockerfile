@@ -9,7 +9,7 @@ ENV PYTHONUNBUFFERED=1 \
 
 # Installiere Poetry und System-Abhängigkeiten
 RUN apt-get update && \ 
-    apt-get install -y curl gcc g++ make libffi-dev libgl1 libglib2.0-0 netcat-openbsd && \ 
+    apt-get install -y curl gcc g++ make libffi-dev libgl1 libglib2.0-0 && \ 
     apt-get clean && \ 
     curl -sSL https://install.python-poetry.org | python3
 
@@ -25,7 +25,8 @@ RUN poetry install
  
 
 ENV PATH="/app/.venv/bin:$PATH"
-#CMD ["nc", "-l", "5500"]
+#CMD ["nc", "-l", "5500"] netcat-openbsd 
+
 # Exponiere den Port 8081 für das Backend
 EXPOSE 8081
 

@@ -5,4 +5,4 @@ router = APIRouter()
 
 @router.get("/")
 async def get_Projects():
-    pass
+    return {"message": "Hello World"}   
