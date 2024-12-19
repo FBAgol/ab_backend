@@ -28,7 +28,7 @@ ENV PATH="/app/.venv/bin:$PATH"
 #CMD ["nc", "-l", "5500"] netcat-openbsd 
 
 # Exponiere den Port 8081 für das Backend
-EXPOSE 8081
+EXPOSE 8000
 
-# Verwende Poetry, um uvicorn auszuführen
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Verwende Poetry, um uvicorn auszuführen --> poetry run 
+CMD ["poetry","run","uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

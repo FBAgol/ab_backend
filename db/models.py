@@ -10,7 +10,7 @@ class Company(Base):
     editors: Mapped[list["Editor"]] = relationship(
         "Editor", back_populates="company", cascade="all, delete-orphan"
     )
-    id: Mapped[UUID] = mapped_column(primary_key=True, default_factory=uuid4)
+    id: Mapped[str] = mapped_column(String(255), primary_key=True, default=lambda: str(uuid4()))
 
 
 class Editor(Base):
@@ -24,7 +24,8 @@ class Editor(Base):
     projects: Mapped[list["Project"]] = relationship(
         "Project", back_populates="editor", cascade="all, delete-orphan"
     )
-    id: Mapped[UUID] = mapped_column(primary_key=True, default_factory=uuid4)
+    id: Mapped[str] = mapped_column(String(255), primary_key=True, default=lambda: str(uuid4()))
+
 
 class City(Base):
     __tablename__ = "city"
@@ -36,7 +37,8 @@ class City(Base):
         "City_street", back_populates="city", cascade="all, delete-orphan"
     )
 
-    id: Mapped[UUID] = mapped_column(primary_key=True, default_factory=uuid4) 
+    id: Mapped[str] = mapped_column(String(255), primary_key=True, default=lambda: str(uuid4()))
+
 
 class Project(Base):
     __tablename__ = "project"
@@ -48,7 +50,7 @@ class Project(Base):
     city_id: Mapped[int] = mapped_column(ForeignKey("city.id"))
     city: Mapped["City"] = relationship("City", back_populates="projects")
 
-    id: Mapped[UUID] = mapped_column(primary_key=True, default_factory=uuid4)
+    id: Mapped[str] = mapped_column(String(255), primary_key=True, default=lambda: str(uuid4()))
 
 
 
@@ -60,7 +62,7 @@ class Street(Base):
         "City_street", back_populates="street"
     )
     Coordinates: Mapped[list["Coordinate"]] = relationship("Coordinate", back_populates="street", cascade="all, delete-orphan")
-    id: Mapped[UUID] = mapped_column(primary_key=True, default_factory=uuid4)
+    id: Mapped[str] = mapped_column(String(255), primary_key=True, default=lambda: str(uuid4()))
 
 class City_street(Base):
     __tablename__ ="city_street"
@@ -72,7 +74,7 @@ class City_street(Base):
     city: Mapped["City"] = relationship("City", back_populates="city_streets")
     street_id: Mapped[int] = mapped_column(ForeignKey("street.id"))
     street: Mapped["Street"] = relationship("Street", back_populates="city_streets")
-    id: Mapped[UUID] = mapped_column(primary_key=True, default_factory=uuid4)
+    id: Mapped[str] = mapped_column(String(255), primary_key=True, default=lambda: str(uuid4()))
 
 
 class Coordinate(Base):
@@ -80,4 +82,4 @@ class Coordinate(Base):
     analyse_picture: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
     street_id: Mapped[int] = mapped_column(ForeignKey("street.id"))
     street: Mapped["Street"] = relationship("Street", back_populates="Coordinates")
-    id: Mapped[UUID] = mapped_column(primary_key=True, default_factory=uuid4)
+    id: Mapped[str] = mapped_column(String(255), primary_key=True, default=lambda: str(uuid4()))
