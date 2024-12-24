@@ -9,7 +9,7 @@ ENV PYTHONUNBUFFERED=1 \
 
 # Installiere Poetry und System-Abhängigkeiten
 RUN apt-get update && \ 
-    apt-get install -y curl gcc g++ make libffi-dev libgl1 libglib2.0-0 && \ 
+    apt-get install -y curl gcc g++ make libffi-dev libgl1 libglib2.0-0  netcat-openbsd && \ 
     apt-get clean && \ 
     curl -sSL https://install.python-poetry.org | python3
 
@@ -32,3 +32,11 @@ EXPOSE 8000
 
 # Verwende Poetry, um uvicorn auszuführen --> poetry run 
 CMD ["poetry","run","uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+
+
+
+
+
+
+
