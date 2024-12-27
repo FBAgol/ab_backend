@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from db.engine import Base, engine
 
-from routers.routers import router
+from routers.superadmin_routers import superadmin_router
 
 
 app = FastAPI()
@@ -13,4 +13,4 @@ async def init_tables():
         await conn.run_sync(Base.metadata.create_all)
 
 
-app.include_router(router)
+app.include_router(superadmin_router)

@@ -34,7 +34,7 @@ class Company(Base):
 class Company_Editor(Base):
     __tablename__ = "company_editor"
     editor_email: Mapped[str] = mapped_column(String(255), nullable=False)  
-    password: Mapped[str] = mapped_column(String(255), nullable=False) 
+    password: Mapped[str] = mapped_column(String(255), nullable=True)
     secret_key: Mapped[str] = mapped_column(String(255), nullable=False)
     super_admin_id: Mapped[UUID] = mapped_column(ForeignKey("super_admin.id"))
     company_id: Mapped[UUID] = mapped_column(ForeignKey("company.id"))
@@ -44,7 +44,7 @@ class Company_Editor(Base):
 class Telekom_Editor(Base):
     __tablename__ = "telekom_editor"
     email: Mapped[str] = mapped_column(String(255), nullable=False)  
-    password: Mapped[str] = mapped_column(String(255), nullable=False) 
+    password: Mapped[str] = mapped_column(String(255), nullable=True) 
     secret_key: Mapped[str] = mapped_column(String(255), nullable=False)
     super_admin_id: Mapped[UUID] = mapped_column(ForeignKey("super_admin.id"))
     notifications: Mapped[list["Notification"]] = relationship(
@@ -96,11 +96,10 @@ class City_Street(Base):
 
 class Coordinate(Base):
     __tablename__ = "coordinate"
-    coord_number: Mapped[int] = mapped_column(Integer, nullable=False)
-    analyse_picture: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
-    result_materiallist: Mapped[str] = mapped_column(String(255), nullable=False)
-    analyse_date: Mapped[str] = mapped_column(String(255), nullable=False)
-    target_material: Mapped[str] = mapped_column(String(255), nullable=False)
+    latitude_longitude: Mapped[str] = mapped_column(str, nullable=False)
+    analyse_picture: Mapped[bytes] = mapped_column(LargeBinary, nullable=True)
+    result_materiallist: Mapped[str] = mapped_column(String(255), nullable=True)
+    analyse_date: Mapped[str] = mapped_column(String(255), nullable=True)
     street_id: Mapped[UUID] = mapped_column(ForeignKey("street.id"))
 
     notification: Mapped["Notification"] = relationship(

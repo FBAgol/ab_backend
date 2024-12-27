@@ -83,6 +83,8 @@ uvicorn = "0.32.0"
 asyncmy = "^0.2.9"
 cryptography = "^44.0.0"
 aiomysql = "^0.2.0"
+xlrd = "^2.0.1"
+openpyxl = "^3.1.5"
 
 
 [build-system]
