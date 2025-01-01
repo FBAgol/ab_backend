@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from uuid import UUID
 
 class  Editors_info(BaseModel):
-    #superadmin_id:UUID
+    superadmin_id:UUID
     company_name: str
     TelEditor_email: str
     TelEditor_secret_key: str

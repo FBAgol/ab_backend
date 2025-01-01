@@ -9,8 +9,8 @@ class Super_Admin(Base):
     email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True) 
     password: Mapped[str] = mapped_column(String(255), nullable=False)
 
-    company_editors: Mapped[list["Company_Editor"]] = relationship(
-        "Company_Editor", back_populates="super_admin", cascade="all, delete-orphan", init=False
+    companys: Mapped[list["Company"]] = relationship(
+        "Company", back_populates="super_admin", cascade="all, delete-orphan", init=False
     )
 
     telekom_editors: Mapped[list["Telekom_Editor"]] = relationship(
@@ -22,36 +22,39 @@ class Super_Admin(Base):
 
 class Company(Base):
     __tablename__ = "company"
-    company_name: Mapped[str] = mapped_column(String(255), nullable=False) 
+    company_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    super_admin_id: Mapped[UUID] = mapped_column(ForeignKey("super_admin.id"))
+    super_admin: Mapped["Super_Admin"] = relationship("Super_Admin", back_populates="companys", init=False) 
 
     company_editors: Mapped[list["Company_Editor"]] = relationship(
         "Company_Editor", back_populates="company", cascade="all, delete-orphan", init=False
     )
-
-    projects: Mapped[list["Project"]] = relationship(
-        "Project", back_populates="company", cascade="all, delete-orphan", init=False
-    )
     id: Mapped[UUID] = mapped_column( primary_key=True, default_factory=uuid4)
 
 class Company_Editor(Base):
+    
     __tablename__ = "company_editor"
-    editor_email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)  
-    password: Mapped[str] = mapped_column(String(255), nullable=True)
-    secret_key: Mapped[str] = mapped_column(String(255), nullable=False)
-    super_admin_id: Mapped[UUID] = mapped_column(ForeignKey("super_admin.id"))
     company_id: Mapped[UUID] = mapped_column(ForeignKey("company.id"))
-    super_admin: Mapped["Super_Admin"] = relationship("Super_Admin", back_populates="company_editors", init=False)
+    editor_email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)  
+    secret_key: Mapped[str] = mapped_column(String(255), nullable=False)
+    password: Mapped[str] = mapped_column(String(255), nullable=True, default=None)
     company: Mapped["Company"] = relationship("Company", back_populates="company_editors", init=False)
+    projects: Mapped[list["Project"]] = relationship(
+        "Project", back_populates="company_editor", cascade="all, delete-orphan", init=False
+    )
 
     id: Mapped[UUID] = mapped_column( primary_key=True, default_factory=uuid4)
 
 class Telekom_Editor(Base):
     __tablename__ = "telekom_editor"
-    email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)  
-    password: Mapped[str] = mapped_column(String(255), nullable=True) 
-    secret_key: Mapped[str] = mapped_column(String(255), nullable=False)
     super_admin_id: Mapped[UUID] = mapped_column(ForeignKey("super_admin.id"))
+    email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)  
+    secret_key: Mapped[str] = mapped_column(String(255), nullable=False)
+    password: Mapped[str] = mapped_column(String(255), nullable=True, default=None) 
     super_admin: Mapped["Super_Admin"] = relationship("Super_Admin", back_populates="telekom_editors", init=False)
+    projects: Mapped[list["Project"]] = relationship(
+        "Project", back_populates="telekom_editor", cascade="all, delete-orphan", init=False
+    )
     notifications: Mapped[list["Notification"]] = relationship(
         "Notification", back_populates="telekom_editor", cascade="all, delete-orphan", init=False
     )
@@ -74,11 +77,11 @@ class City(Base):
 class Project(Base):
     __tablename__ = "project"
     project_name: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
-    company_id: Mapped[UUID] = mapped_column(ForeignKey("company.id"))
     telekom_editor_id: Mapped[UUID] = mapped_column(ForeignKey("telekom_editor.id"))
+    company_editor_id: Mapped[UUID] = mapped_column(ForeignKey("company_editor.id"))
     city_id: Mapped[UUID] = mapped_column(ForeignKey("city.id"))
-    company: Mapped["Company"] = relationship("Company", back_populates="projects", init=False)
-    telekom_editor: Mapped["Telekom_Editor"] = relationship("Telekom_Editor", init=False)
+    telekom_editor: Mapped["Telekom_Editor"] = relationship("Telekom_Editor",back_populates="projects", init=False)
+    company_editor: Mapped["Company_Editor"] = relationship("Company_Editor", back_populates="projects", init=False)
     city: Mapped["City"] = relationship("City", back_populates="projects", init=False)
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default_factory=uuid4)
@@ -108,17 +111,21 @@ class City_Street(Base):
 
 class Coordinate(Base):
     __tablename__ = "coordinate"
-    latitude_longitude: Mapped[list[float]] = mapped_column(JSON, nullable=False)
-    analyse_picture: Mapped[bytes] = mapped_column(LargeBinary, nullable=True)
-    result_materiallist: Mapped[str] = mapped_column(String(255), nullable=True)
-    analyse_date: Mapped[str] = mapped_column(String(255), nullable=True)
+    
     street_id: Mapped[UUID] = mapped_column(ForeignKey("street.id"))
+    latitude_longitude: Mapped[list[float]] = mapped_column(JSON, nullable=False)
+    result_materiallist: Mapped[str] = mapped_column(String(255), nullable=False)
+    analyse_picture: Mapped[bytes] = mapped_column(LargeBinary, nullable=True, default=None)
+    analyse_date: Mapped[str] = mapped_column(String(255), nullable=True, default=None)
+    
     street: Mapped["Street"] = relationship("Street", back_populates="coordinates", init=False)
     notification: Mapped["Notification"] = relationship(
         back_populates="coordinate", uselist=False, init=False
     )
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default_factory=uuid4)
+
+    
 
 class Notification(Base):
     __tablename__ = "notification"
