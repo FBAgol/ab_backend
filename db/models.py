@@ -115,6 +115,7 @@ class Coordinate(Base):
     street_id: Mapped[UUID] = mapped_column(ForeignKey("street.id"))
     latitude_longitude: Mapped[list[float]] = mapped_column(JSON, nullable=False)
     result_materiallist: Mapped[str] = mapped_column(String(255), nullable=False)
+    picture: Mapped[bytes] = mapped_column(LargeBinary, nullable=True, default=None)
     analyse_picture: Mapped[bytes] = mapped_column(LargeBinary, nullable=True, default=None)
     analyse_date: Mapped[str] = mapped_column(String(255), nullable=True, default=None)
     

@@ -4,10 +4,11 @@ from typing import List
 import sqlalchemy as sa
 from sqlalchemy.orm import joinedload, selectinload
 from uuid import UUID
-
+from db import Hash
 class SuperAdminOperations:
     def __init__(self, db_session: AsyncSession)->None: 
         self.db_session = db_session
+        self.hash= Hash()
 
     async def create_superadmin(self, email:str, password:str)-> Super_Admin:
         try:
@@ -19,7 +20,8 @@ class SuperAdminOperations:
                 if superadmin:
                     return superadmin
                 else:
-                    superadmin = Super_Admin(email= email, password= password)
+
+                    superadmin = Super_Admin(email= email, password= hash.bcrypt(password))
                     session.add(superadmin)
                     await session.commit()
                     #await session.refresh(company)
@@ -38,7 +40,7 @@ class SuperAdminOperations:
                 if editor:
                     return editor
                 else:
-                    editor = Company_Editor(company_id=company_id, editor_email=email, secret_key=secret_key)
+                    editor = Company_Editor(company_id=company_id, editor_email=email, secret_key=hash.bcrypt(secret_key))
                     session.add(editor)
                     await session.commit()
                     #await session.refresh(editor)
@@ -57,7 +59,7 @@ class SuperAdminOperations:
                 if editor:
                     return editor
                 else:
-                    editor = Telekom_Editor(super_admin_id=super_admin_id, email=email, secret_key=secret_key)
+                    editor = Telekom_Editor(super_admin_id=super_admin_id, email=email, secret_key=hash.bcrypt(secret_key))
                     session.add(editor)
                     await session.commit()
                     #await session.refresh(editor)

@@ -12,3 +12,12 @@ class  Editors_info(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class company_editor(BaseModel):
+    secret_key:str
+    email:str
+    password:str
+
+    class Config:
+        orm_mode = True
