@@ -43,12 +43,10 @@ class SuperAdminOperations:
                     await session.commit()
                     #await session.refresh(editor)
                     editor = await session.scalar(query)
+                    return editor
         except Exception as e:
             raise Exception(f"Error creating company_editor: {str(e)}")
         
-        
-
-            
 
     async def create_telekom_editor(self, email:str, secret_key:str, super_admin_id:UUID)-> Telekom_Editor:
         try:
@@ -59,21 +57,20 @@ class SuperAdminOperations:
                 if editor:
                     return editor
                 else:
-                    editor = Telekom_Editor(email=email, secret_key=secret_key, super_admin_id=super_admin_id)
+                    editor = Telekom_Editor(super_admin_id=super_admin_id, email=email, secret_key=secret_key)
                     session.add(editor)
                     await session.commit()
                     #await session.refresh(editor)
                     editor= await session.scalar(query)
+                    return editor
         except Exception as e:
             raise Exception(f"Error creating telekom_editor: {str(e)}")
-        
-
         
             
 
     async def create_company(self, company_name:str, super_admin_id:UUID)-> Company:
         try:
-            query = sa.select(Company).options(selectinload(Company.company_editors)).where(Company.company_name == company_name)
+            query = sa.select(Company).options(selectinload(Company.company_editors), joinedload(Company.super_admin)).where(Company.company_name == company_name)
         
             async with self.db_session as session:
                 company = await session.scalar(query)
@@ -95,7 +92,7 @@ class SuperAdminOperations:
     
     async def create_project(self, priject_name:str, company_editor_id:UUID, telekom_editor_id:UUID, city_id:UUID)-> Project:
         try:
-            query = sa.select(Project).options( joinedload(Project.city),joinedload(Project.telekom_editor), joinedload(Project.company_editor)).where(Project.project_name == priject_name)
+            query = sa.select(Project).options( joinedload(Project.city),joinedload(Project.telekom_editor), joinedload(Project.company_editor)).where(Project.project_name == priject_name, Project.city_id == city_id)
             
             async with self.db_session as session:
                 project= await session.scalar(query)
@@ -112,6 +109,7 @@ class SuperAdminOperations:
             raise Exception(f"Error creating project: {str(e)}")
         
 
+
     async def create_city(self, name: str) -> City:
         try:
             # nutzen wir joinedload, um auch die "projects"-Beziehung zu laden
@@ -125,6 +123,7 @@ class SuperAdminOperations:
                     city = City(city_name=name)
                     session.add(city)
                     await session.commit()
+                    #await session.refresh(city)
                     # um nicht diese lazy loading zu passieren, dann sollen wir wieder die nächste Zeile schreiben damit session offen bleibt
                     city = await session.scalar(query)
                     return city
@@ -174,22 +173,21 @@ class SuperAdminOperations:
             raise Exception(f"Error creating Street: {str(e)}")
         
 
-    async def create_coord(self, coord_number:List[float], target_material:str, street_id:UUID):
+    async def create_coord(self, coord_number:List[float], target_material:str, street_id:UUID)-> Coordinate:
         try:
-            query = sa.select(Coordinate).options(joinedload(Coordinate.notification)).where(Coordinate.latitude_longitude == coord_number, Coordinate.street_id == street_id)
-            print(f"query is called")
+            query = sa.select(Coordinate).options(joinedload(Coordinate.notification), joinedload(Coordinate.street)).where(Coordinate.latitude_longitude == coord_number, Coordinate.street_id == street_id)
             async with self.db_session as session:
                 coord= await session.scalar(query)
-                print(f"coord is called")
                 if coord:
-                    print(f"coord found")
-                    return 
+                    return coord
                 else:
                     coord = Coordinate(latitude_longitude=coord_number, result_materiallist=target_material, street_id=street_id)
                     session.add(coord)
                     await session.commit()
                     #await session.refresh(coord)
                     coord= await session.scalar(query)
+                    return coord
+
                     
         except Exception as e:
             raise Exception(f"Error creating Coord: {str(e)}")
