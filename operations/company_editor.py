@@ -27,6 +27,21 @@ class CompanyEditorOperations:
                 return "Invalid secret key or email."
         except Exception as e:
             raise Exception(f"Error creating company_editor: {str(e)}")
+        
+
+    async def login(self, email:str, password:str)-> Company_Editor | str:
+        try:
+            query= sa.select(Company_Editor).where(Company_Editor.editor_email==email)
+
+            async with self.db_session as session:
+                editor = await session.scalar(query)
+                if editor:
+                    if self.hash.verify(editor.password, password):
+                        return editor
+                    return "Invalid password."
+                return "Invalid email."
+        except Exception as e:
+            raise Exception(f"Error logging in: {str(e)}")
 
 """
 

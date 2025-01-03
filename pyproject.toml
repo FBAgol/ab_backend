@@ -86,6 +86,8 @@ aiomysql = "^0.2.0"
 xlrd = "^2.0.1"
 openpyxl = "^3.1.5"
 passlib = "^1.7.4"
+python-dotenv = "^1.0.1"
+pyjwt = "^2.10.1"
 
 
 [build-system]
