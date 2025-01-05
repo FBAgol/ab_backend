@@ -3,7 +3,12 @@ from datetime import datetime, timedelta, timezone  # Importiere 'timezone'
 from typing import Optional
 from fastapi import HTTPException, status
 from .config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_DAYS
+from jwt.exceptions import ExpiredSignatureError, DecodeError
 
+
+SECRET_KEY="edit_land"
+ALGORITHM="HS256"
+ACCESS_TOKEN_EXPIRE_DAYS = 1 
 
 # Hilfsfunktion: Erstelle das Access-Token mit 1 Tag Ablaufzeit
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
@@ -28,14 +33,21 @@ def create_refresh_token(data: dict, expires_delta: Optional[timedelta] = None) 
     return encoded_jwt
 
 # Hilfsfunktion: Verifiziere das Token
+
 def verify_token(token: str) -> dict:
     try:
+        # Überprüfen, ob der Token als String vorliegt
+        if not isinstance(token, str):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Token must be a string")
+
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])  # Token dekodieren und verifizieren
+        print("Payload is: ", payload)
         return payload
-    except jwt.ExpiredSignatureError:
+    except ExpiredSignatureError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired")
-    except jwt.JWTError:
+    except DecodeError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token is invalid")
+
 
 # Extrahiere die Benutzer-ID aus dem Token
 def get_user_id_from_token(token: str) -> str:

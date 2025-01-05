@@ -29,3 +29,10 @@ class Login(BaseModel):
     class Config:
         orm_mode = True
 
+
+class ProjectInfo(BaseModel):
+    editor_toekn:str
+    projectname:str
+
+    class Config:
+        orm_mode = True
