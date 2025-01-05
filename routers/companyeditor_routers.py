@@ -14,14 +14,34 @@ companyeditor_router = APIRouter()
 async def register_company_Editor(
     db_session: Annotated[AsyncSession, Depends(get_db)],
     company_editor: Editor_regist,
-)-> str:
+)-> dict:
     try:
         editor = await CompanyEditorOperations(db_session).registration(company_editor.secret_key, company_editor.email, company_editor.password)
-        return editor
+        
+        if isinstance(editor, str): 
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=editor)
+        
+        access_token = create_access_token(data={"sub": str(editor["id"])}, expires_delta=timedelta(days=1)) 
+        refresh_token = create_refresh_token(data={"sub": str(editor["id"])}, expires_delta=timedelta(days=7))
+        
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer",  
+            "editor": editor  
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
-    
 
+    
+"""
+
+{
+    "secret_key":"string456",
+    "email":"max@baumax.de",
+    "password":"maxbauman"
+}
+"""
 
 
 
@@ -29,23 +49,32 @@ async def register_company_Editor(
 async def login_company_editor(
     db_session: Annotated[AsyncSession, Depends(get_db)],
     editor_login: Login
-):
+)-> dict:
     try:
         editor = await CompanyEditorOperations(db_session).login(editor_login.email, editor_login.password)
         
-        if isinstance(editor, str):  # Wenn der Login fehlgeschlagen ist
+        if isinstance(editor, str):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=editor)
         
-        # Erstelle Tokens mit einer Ablaufzeit von 1 Tag für das Access-Token
-        access_token = create_access_token(data={"sub": str(editor.id)}, expires_delta=timedelta(days=1)) 
-        refresh_token = create_refresh_token(data={"sub": str(editor.id)}, expires_delta=timedelta(days=7))
+        access_token = create_access_token(data={"sub": str(editor["id"])}, expires_delta=timedelta(days=1)) 
+        refresh_token = create_refresh_token(data={"sub": str(editor["id"])}, expires_delta=timedelta(days=7))
 
-        # Rückgabe der Tokens
         return {
             "access_token": access_token,
             "refresh_token": refresh_token,
-            "token_type": "bearer"  # Token-Typ: Bearer
+            "token_type": "bearer", 
+            "editor": editor  
         }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error during login: {str(e)}")
+
+
+
+"""
+
+{
+    "email":"max@baumax.de",
+    "password":"maxbauman"
+}
+"""

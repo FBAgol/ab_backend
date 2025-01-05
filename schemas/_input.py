@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from uuid import UUID
 
-class  Editors_info(BaseModel):
+class  ManagementInfo(BaseModel):
     superadmin_id:UUID
     company_name: str
     TelEditor_email: str
@@ -28,3 +28,4 @@ class Login(BaseModel):
 
     class Config:
         orm_mode = True
+

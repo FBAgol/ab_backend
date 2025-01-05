@@ -5,7 +5,7 @@ from typing import Annotated
 from sqlalchemy.ext.asyncio import AsyncSession
 from operations.superadmin import SuperAdminOperations
 from db.engine import get_db
-from schemas._input import Editors_info
+from schemas._input import ManagementInfo
 from exel_conver import convert_excel_to_list as exel_convert
 
 
@@ -22,7 +22,7 @@ async def create_editors_projects(
     try:
         try:
             editors_data = json.loads(editors)
-            editors = Editors_info(**editors_data).model_dump()
+            editors = ManagementInfo(**editors_data).model_dump()
         except (json.JSONDecodeError, ValidationError) as e:
             raise HTTPException(status_code=400, detail=f"Invalid JSON structure: {str(e)}")
 

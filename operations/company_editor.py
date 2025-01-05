@@ -1,8 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from db.models import Super_Admin, Company_Editor, Telekom_Editor, Company, Project, City, Street, City_Street, Coordinate, Notification
+from db.models import Company_Editor
 from db import Hash 
 import sqlalchemy as sa
 from sqlalchemy.orm import joinedload, selectinload
+from convert_to_dict import to_dict
+
 
 
 class CompanyEditorOperations: 
@@ -10,24 +12,29 @@ class CompanyEditorOperations:
         self.db_session = db_session
         self.hash= Hash()
 
-    async def registration (self, secret_key:str, email:str, password:str)-> Company_Editor | str:
-        try:
-            print("password is", password)
-            query= sa.select(Company_Editor).where(Company_Editor.editor_email==email, Company_Editor.secret_key==secret_key)
-
-            async with self.db_session as session:
-                editor = await session.scalar(query)
-                if editor:
-                    if editor.password:
-                        return "A password already exists for this editor."
-                    editor.password = self.hash.bcrypt(password)
-                    session.add(editor)
-                    await session.commit()
-                    return "Password set successfully."
-                return "Invalid secret key or email."
-        except Exception as e:
-            raise Exception(f"Error creating company_editor: {str(e)}")
+    
+    async def registration(self, secret_key: str, email: str, password: str) -> Company_Editor| str:
+        query = sa.select(Company_Editor).where(Company_Editor.editor_email == email)
         
+        async with self.db_session as session:
+            try:
+                editor = await session.scalar(query)
+
+                if not editor or self.hash.verify(editor.secret_key, secret_key)!=True:
+                    return "Invalid secret key or email."
+                
+                if editor.password and self.hash.verify(editor.password, password):
+                    return "A password already exists for this editor."
+                
+                updated_password = self.hash.bcrypt(password)
+                updated_editor = (sa.update(Company_Editor).where(Company_Editor.editor_email == email).values(password=updated_password))
+                await session.execute(updated_editor)
+                await session.commit()
+                editor.password = updated_password
+                return to_dict(editor)
+
+            except Exception as e:
+                raise Exception(f"Unexpected error occurred: {e}")
 
     async def login(self, email:str, password:str)-> Company_Editor | str:
         try:
@@ -37,17 +44,9 @@ class CompanyEditorOperations:
                 editor = await session.scalar(query)
                 if editor:
                     if self.hash.verify(editor.password, password):
-                        return editor
+                        return to_dict(editor)
                     return "Invalid password."
                 return "Invalid email."
         except Exception as e:
             raise Exception(f"Error logging in: {str(e)}")
 
-"""
-
-{
-    "secret_key":"string456",
-    "email":"max@baumax.de",
-    "password":"maxbauman"
-}
-"""
