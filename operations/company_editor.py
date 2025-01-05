@@ -83,8 +83,8 @@ class CompanyEditorOperations:
                             streets = [
                                 {
                                     "street_name": street.street_name,
-                                    "coordinates": [
-                                        {
+                                    "coordinates_ZoneId": [
+                                        {   "zone_id": coord.zone_id,
                                             "latitude_longitude": coord.latitude_longitude,
                                             "target_material": coord.result_materiallist,
                                         }
