@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import ForeignKey, LargeBinary, String, JSON
+from sqlalchemy import ForeignKey, LargeBinary, String, JSON,Integer
 from uuid import UUID, uuid4
 from .engine import Base
 
@@ -113,6 +113,7 @@ class Coordinate(Base):
     __tablename__ = "coordinate"
     
     street_id: Mapped[UUID] = mapped_column(ForeignKey("street.id"))
+    zone_id: Mapped[int] = mapped_column(Integer, nullable=False)
     latitude_longitude: Mapped[list[float]] = mapped_column(JSON, nullable=False)
     result_materiallist: Mapped[str] = mapped_column(String(255), nullable=False)
     picture: Mapped[bytes] = mapped_column(LargeBinary, nullable=True, default=None)

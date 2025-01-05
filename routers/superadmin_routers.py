@@ -34,7 +34,7 @@ async def create_editors_projects(
             street = await SuperAdminOperations(db_session).create_street(streeet["street"])
             city_street =await SuperAdminOperations(db_session).create_city_street(city.id, street.id)
             for coord in streeet["coordinates"]:
-                coord =await SuperAdminOperations(db_session).create_coord(coord["lat_lang"], coord["target_material"], street.id)
+                coord =await SuperAdminOperations(db_session).create_coord(coord["fid"],coord["lat_lang"], coord["target_material"], street.id)
 
         company =await SuperAdminOperations(db_session).create_company(editors["company_name"], editors["superadmin_id"])
         company_editor =await SuperAdminOperations(db_session).create_company_editor(editors["Com_Editor_email"], editors["Com_Editor_secret_key"], company.id)
@@ -46,7 +46,8 @@ async def create_editors_projects(
         return {
             "editors": editors,
             "headers": exel_converter["headers"],
-            "rows": exel_converter["data"],
+            #"rows": exel_converter["data"],
+            "file": exel_converter
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
