@@ -1,12 +1,28 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 import sqlalchemy as sa
-from db.models import Company_Editor, Project, City, City_Street, Street
+from fastapi import UploadFile, File, HTTPException
+from db.models import Company_Editor, Project, City, City_Street, Street, Coordinate, Notification
+from uuid import UUID
+import tempfile
+from fastapi.responses import StreamingResponse
+import os
+import shutil
+from io import BytesIO
 from db import Hash 
 from convert_to_dict import to_dict
 from jwt_utils import get_user_id_from_token
-from uuid import UUID
+from NT_O_Detection_v3_800.anaylse_img import analyse_imgs
+from uuid import UUID, uuid4
 
+
+# Verzeichnisse für Bilder
+ORIGINAL_DIR = "/app/images/original"
+ANALYSE_DIR = "/app/images/analyse"
+
+# Verzeichnisse sicherstellen
+os.makedirs(ORIGINAL_DIR, exist_ok=True)
+os.makedirs(ANALYSE_DIR, exist_ok=True)
 
 class CompanyEditorOperations: 
     def __init__(self, db_session: AsyncSession)->None: 
@@ -105,4 +121,68 @@ class CompanyEditorOperations:
                 return "Editor not found."
         except Exception as e:
             raise Exception(f"Error getting project info: {str(e)}")
+    
+    async def analyse_img(self, token: str, lat: float, long: float, file: UploadFile) -> dict:
+        editor_id = UUID(get_user_id_from_token(token))
 
+        query_editor = sa.select(Company_Editor).where(Company_Editor.id == editor_id)
+        query_coord = sa.select(Coordinate).where(Coordinate.latitude == lat, Coordinate.longitude == long)
+        query_notification = sa.select(Notification).options(joinedload(Notification.coordinate)).where(Notification.coordinate_id == query_coord.id)
+
+        async with self.db_session as session:
+            editor = await session.scalar(query_editor)
+            coord_obj = await session.scalar(query_coord)
+
+            if not editor or not coord_obj:
+                raise HTTPException(status_code=404, detail="Editor or coordinates not found.")
+
+            # Temporäre Datei für das Originalbild erstellen
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp_file:
+                tmp_file.write(await file.read())
+                tmp_file_path = tmp_file.name
+
+            try:
+                analysed_image, detected_objects = analyse_imgs(tmp_file_path)
+
+                # Originalbild speichern
+                original_filename = f"{uuid4()}.jpg"
+                original_filepath = os.path.join(ORIGINAL_DIR, original_filename)
+
+                shutil.move(tmp_file_path, original_filepath)
+
+                # Analysiertes Bild speichern
+                analysed_filename = f"{uuid4()}.jpg"
+                analysed_filepath = os.path.join(ANALYSE_DIR, analysed_filename)
+                with open(analysed_filepath, "wb") as analysed_file:
+                    analysed_file.write(analysed_image.getvalue())
+
+                # Bild-URLs generieren
+                original_image_url = f"/static/images/original/{original_filename}"
+                analysed_image_url = f"/static/images/analyse/{analysed_filename}"
+
+                # Datenbank aktualisieren
+                coord_obj.original_image_url = original_image_url
+                coord_obj.analysed_image_url = analysed_image_url
+                coord_obj.result_materiallist= detected_objects
+
+
+                for object in detected_objects:
+                    if object["status"] == False:
+                        notification = await session.scalar(query_notification)
+                await session.commit()
+
+                # Rückgabe der Analyseergebnisse und Bild-URLs
+                return {
+                    "detected_objects": detected_objects,
+                    "original_image_url": original_image_url,
+                    "analysed_image_url": analysed_image_url,
+                }
+
+            except Exception as e:
+                # Fehlerbehandlung und temporäre Dateien löschen
+                raise HTTPException(status_code=500, detail=f"Error during image analysis: {str(e)}")
+
+            finally:
+                # Sicherstellen, dass temporäre Datei gelöscht wird, falls sie noch existiert
+                if os.path.exists(tmp_file_path):
+                    os.remove(tmp_file_path)

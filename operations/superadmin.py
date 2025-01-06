@@ -175,15 +175,15 @@ class SuperAdminOperations:
             raise Exception(f"Error creating Street: {str(e)}")
         
 
-    async def create_coord(self, fid:int ,coord_number:List[float], target_material:str, street_id:UUID)-> Coordinate:
+    async def create_coord(self, fid:int ,latitude:float,longitude:float, target_material:str, street_id:UUID)-> Coordinate:
         try:
-            query = sa.select(Coordinate).where(Coordinate.latitude_longitude == coord_number, Coordinate.street_id == street_id)
+            query = sa.select(Coordinate).where(Coordinate.latitude == latitude,Coordinate.longitude==longitude, Coordinate.street_id == street_id)
             async with self.db_session as session:
                 coord= await session.scalar(query)
                 if coord:
                     return coord
                 else:
-                    coord = Coordinate(zone_id=fid,latitude_longitude=coord_number, result_materiallist=target_material, street_id=street_id)
+                    coord = Coordinate(zone_id=fid,latitude=latitude,longitude=longitude, target_material=target_material, street_id=street_id)
                     session.add(coord)
                     await session.commit()
                     #await session.refresh(coord)

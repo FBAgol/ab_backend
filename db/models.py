@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import ForeignKey, LargeBinary, String, JSON,Integer
+from sqlalchemy import ForeignKey, String, JSON,Integer, Numeric
 from uuid import UUID, uuid4
 from .engine import Base
 
@@ -114,11 +114,12 @@ class Coordinate(Base):
     
     street_id: Mapped[UUID] = mapped_column(ForeignKey("street.id"))
     zone_id: Mapped[int] = mapped_column(Integer, nullable=False)
-    latitude_longitude: Mapped[list[float]] = mapped_column(JSON, nullable=False)
-    result_materiallist: Mapped[str] = mapped_column(String(255), nullable=False)
-    picture: Mapped[bytes] = mapped_column(LargeBinary, nullable=True, default=None)
-    analyse_picture: Mapped[bytes] = mapped_column(LargeBinary, nullable=True, default=None)
-    analyse_date: Mapped[str] = mapped_column(String(255), nullable=True, default=None)
+    longitude: Mapped[float] = mapped_column(Numeric(20,15), nullable=False)
+    latitude : Mapped[float] = mapped_column(Numeric(20,15), nullable=False)
+    target_material: Mapped[str] = mapped_column(String(255), nullable=False)
+    result_materiallist: Mapped[list[dict]] = mapped_column(JSON, nullable=False, default=None)
+    original_image_url: Mapped[str] = mapped_column(String(255), nullable=True, default=None)
+    analysed_image_url: Mapped[str] = mapped_column(String(255), nullable=True, default=None)
     
     street: Mapped["Street"] = relationship("Street", back_populates="coordinates", init=False, lazy="joined")
     notification: Mapped["Notification"] = relationship(
@@ -127,11 +128,12 @@ class Coordinate(Base):
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default_factory=uuid4)
 
+
     
 
 class Notification(Base):
     __tablename__ = "notification"
-    message: Mapped[str] = mapped_column(String(255), nullable=False)
+    message: Mapped[str] = mapped_column(String(255), nullable=False) # projektname + coord+ city + street + company editor + analysiertes bild + confidence
     coordinate_id: Mapped[UUID] = mapped_column(ForeignKey("coordinate.id"))
     telekom_editor_id: Mapped[UUID] = mapped_column(ForeignKey("telekom_editor.id"))
     coordinate: Mapped[Coordinate] = relationship("Coordinate", back_populates="notification", init=False, lazy="joined")

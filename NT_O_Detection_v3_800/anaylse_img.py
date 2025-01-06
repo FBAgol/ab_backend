@@ -1,9 +1,10 @@
-import os
+#import os
 import cv2
 from io import BytesIO
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from ultralytics import YOLO
 
+"""
 # Setze das Home-Verzeichnis und den Pfad zum Dataset
 HOME = os.getcwd()
 
@@ -48,15 +49,15 @@ def analyse_imgs(img):
         })
 
     # Bild anzeigen
-    """
+    
     plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
     plt.axis('off')
     plt.show()
-    """
+    
 
 
     # Bild speichern
-    """
+
      output_dir = os.path.join(HOME, 'output-testimg')  # Zielordner
     os.makedirs(output_dir, exist_ok=True)  # Erstelle den Ordner, falls er nicht existiert
 
@@ -64,24 +65,24 @@ def analyse_imgs(img):
     cv2.imwrite(output_image_path, image)  # Bild speichern
     print(f'Bild gespeichert unter: {output_image_path}')
     
-    """
+
 
 
 
 
 
     # Erkannten Klasseninformationen ausgeben
-    """
+    
      print("Gefundene Objekte mit Position und Größe:")
     for obj in detected_objects:
         print(
             f"Klasse: {obj['class_name']}, x: {obj['x']}, y: {obj['y']}, Breite: {obj['width']}, Höhe: {obj['height']}")
-    """
+
 
 
     # Optional: Visualisierung von Trainingsbildern
 
-    """
+
         def visualize_training_images(train_images_path):
         train_image_files = os.listdir(train_images_path)
 
@@ -93,7 +94,7 @@ def analyse_imgs(img):
             plt.axis('off')
             plt.title(img_file)
             plt.show()
-    """
+    
 
     # Bild in einen BytesIO-Puffer schreiben
     _, buffer = cv2.imencode('.jpg', image)
@@ -102,3 +103,58 @@ def analyse_imgs(img):
     return image_bytes, detected_objects
 
 
+
+    """
+
+
+# Funktion für die YOLO-Bildanalyse
+def analyse_imgs(img_path):
+    # Modellpfad definieren
+    model_path = '/app/NT_O_Detection_v3_800/NT_O3/NT_O_Detection3/runs/detect/train/weights/best.pt'
+    model = YOLO(model_path)
+
+    # Bild lesen
+    image = cv2.imread(img_path)
+
+    # Inferenz durchführen
+    results = model(image, conf=0.3)
+
+    # Überprüfe die Rückgabewerte
+    boxes = results[0].boxes.xyxy
+    scores = results[0].boxes.conf
+    classes = results[0].boxes.cls
+    class_names = model.model.names  # Zugriff auf die Klassennamen
+
+    # Liste zur Speicherung der erkannten Klassen und deren Wahrscheinlichkeiten (ohne Positionen)
+    detected_objects = []
+
+    # Boxen und Texte zeichnen
+    colors = [[0, 255, 0], [255, 0, 0], [0, 0, 255]]
+    for box, score, cls in zip(boxes, scores, classes):
+        x1, y1, x2, y2 = map(int, box)
+        color = colors[int(cls) % len(colors)]
+        label = f'{class_names[int(cls)]}: {score:.2f}'
+        
+        # Zeichne die Boxen und das Label auf das Bild
+        cv2.rectangle(image, (x1, y1), (x2, y2), color, 2)
+        cv2.putText(image, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+
+        # Füge nur die Klassennamen und die Wahrscheinlichkeit (Confidence) hinzu
+        if float(score) > 0.7:
+            detected_objects.append({
+                'object': class_names[int(cls)],
+                'confidence': float(score)*100,
+                'status': True  # Die Wahrscheinlichkeit in einen Float konvertieren
+            })
+        else:
+            detected_objects.append({
+                'object': class_names[int(cls)],
+                'confidence': float(score)*100,
+                'status': False  # Die Wahrscheinlichkeit in einen Float konvertieren
+            })
+
+    # Bild in einen BytesIO-Puffer schreiben
+    _, buffer = cv2.imencode('.jpg', image)
+    image_bytes = BytesIO(buffer)
+
+    return image_bytes, detected_objects

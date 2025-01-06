@@ -7,7 +7,8 @@ from typing import List
 from pydantic import BaseModel
 class Coordinate(BaseModel):
     fid: int
-    lat_lang: List[float]
+    latitude: float
+    longitude: float
     target_material: str
 class Street(BaseModel):
     street: str
@@ -102,7 +103,7 @@ def convert(data:list):
         
         # Koordinate hinzufügen
         street_map[street_name].coordinates.append(
-            Coordinate(fid=f_id,lat_lang=[latitude, longitude], target_material=material)
+            Coordinate(fid=f_id,latitude=latitude,longitude=longitude, target_material=material)
         )
 
     # Straßen zur Stadt hinzufügen

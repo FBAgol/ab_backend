@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from uuid import UUID
+from typing import List
 
 class  ManagementInfo(BaseModel):
     superadmin_id:UUID
@@ -33,6 +34,23 @@ class Login(BaseModel):
 class ProjectInfo(BaseModel):
     editor_toekn:str
     projectname:str
+
+    class Config:
+        orm_mode = True
+
+class AnalyseImg(BaseModel):
+    obejct:str
+    confidense:int
+    status:bool
+
+    class Config:
+        orm_mode = True
+
+
+
+class UploadImgRequest(BaseModel):
+    token: str
+    coord: List[float]
 
     class Config:
         orm_mode = True

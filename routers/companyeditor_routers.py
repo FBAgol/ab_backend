@@ -1,12 +1,14 @@
-from fastapi import APIRouter, HTTPException, Depends, status, Body
+from fastapi import APIRouter, HTTPException, Depends, status, Body, File, UploadFile
+from starlette.responses import StreamingResponse, JSONResponse
 from pydantic import ValidationError
-from typing import Annotated
+from typing import Annotated, List
 from sqlalchemy.ext.asyncio import AsyncSession
 from operations.company_editor import CompanyEditorOperations
 from db.engine import get_db
 from schemas._input import Editor_regist , Login, ProjectInfo
-from jwt_utils import create_access_token, create_refresh_token, verify_token
+from jwt_utils import create_access_token, create_refresh_token
 from datetime import timedelta
+
 
 companyeditor_router = APIRouter()
 
@@ -100,3 +102,36 @@ async def get_projects_info(
     "projectname":"telMax"
 }
 """
+
+
+
+    
+@companyeditor_router.post("/upload/img")
+async def upload_img(
+    db_session: Annotated[AsyncSession, Depends(get_db)],
+    token: str,
+    lat: float,
+    long: float,
+    file: UploadFile = File(...)
+):
+    try:
+        # Analysiere das Bild und erhalte die Ergebnisse
+        result = await CompanyEditorOperations(db_session).analyse_img(token, lat, long, file)
+
+        # Rückgabe der Analyseergebnisse als JSON
+        return JSONResponse(content=result)
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
+   
+    
+
+
+
+{
+    "object": "car",
+    "confidence": 0.9,
+    "status": "ture"
+}

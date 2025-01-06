@@ -9,6 +9,7 @@ from schemas._input import ManagementInfo
 from exel_conver import convert_excel_to_list as exel_convert
 
 
+
 superadmin_router = APIRouter()
 
 
@@ -34,7 +35,7 @@ async def create_editors_projects(
             street = await SuperAdminOperations(db_session).create_street(streeet["street"])
             city_street =await SuperAdminOperations(db_session).create_city_street(city.id, street.id)
             for coord in streeet["coordinates"]:
-                coord =await SuperAdminOperations(db_session).create_coord(coord["fid"],coord["lat_lang"], coord["target_material"], street.id)
+                coord =await SuperAdminOperations(db_session).create_coord(coord["fid"],coord["latitude"],coord["longitude"], coord["target_material"], street.id)
 
         company =await SuperAdminOperations(db_session).create_company(editors["company_name"], editors["superadmin_id"])
         company_editor =await SuperAdminOperations(db_session).create_company_editor(editors["Com_Editor_email"], editors["Com_Editor_secret_key"], company.id)
