@@ -286,11 +286,14 @@ class CompanyEditorOperations:
                  # Lösche alte Benachrichtigungen
                 query_notification = sa.select(Notification).where(Notification.coordinate_id == coord.id)
 
-                notifications = await session.scalar(query_notification)
+                notification = await session.scalar(query_notification)
+            
 
-                if notifications:
+
+                if notification:
                     delete_coord_notification_query = sa.delete(Notification).where(Notification.coordinate_id == coord.id)
-                    await session.scalar(delete_coord_notification_query)
+                    #await session.scalar(delete_coord_notification_query)
+                    await session.execute(delete_coord_notification_query)
                 
 
                 # Datenbank aktualisieren
@@ -340,12 +343,12 @@ class CompanyEditorOperations:
                         session.add(notification)
 
                     await session.commit()
-                    return {
-                    "detected_objects": detected_objects,
-                    "original_image_url": original_image_url,
-                    "analysed_image_url": analysed_image_url,
-                    "notification": notification_message
-                }
+                return {
+                "detected_objects": detected_objects,
+                "original_image_url": original_image_url,
+                "analysed_image_url": analysed_image_url,
+                "notification": notification_message
+            }
 
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Error during image analysis: {str(e)}")

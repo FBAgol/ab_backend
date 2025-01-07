@@ -50,7 +50,19 @@ class AnalyseImg(BaseModel):
 
 class UploadImgRequest(BaseModel):
     token: str
-    coord: List[float]
+    lat: float
+    long: float
+
+    class Config:
+        orm_mode = True
+
+
+class UpdateImgRequest(BaseModel):
+    token: str
+    lat: float
+    long: float
+    oldOriginalImgUrl: str
+    oldAnalyzedImgUrl: str
 
     class Config:
         orm_mode = True

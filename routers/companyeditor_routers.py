@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, status, Body, File, UploadFile
+from fastapi import APIRouter, HTTPException, Depends, status, Body, File, UploadFile, Form
 from starlette.responses import JSONResponse
 from typing import Annotated
 from datetime import timedelta
@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from operations.company_editor import CompanyEditorOperations
 from db.engine import get_db
-from schemas._input import Editor_regist , Login
+from schemas._input import Editor_regist , Login, UploadImgRequest, UpdateImgRequest
 from jwt_utils import create_access_token, create_refresh_token
 
 
@@ -110,14 +110,13 @@ async def get_projects_info(
 @companyeditor_router.post("/upload/img")
 async def upload_img(
     db_session: Annotated[AsyncSession, Depends(get_db)],
-    token: str,
-    lat: float,
-    long: float,
+    upload_img_request: str= Form(...),
     file: UploadFile = File(...)
 ):
     try:
+        upload_request = UploadImgRequest.model_validate_json(upload_img_request).model_dump()
         # Analysiere das Bild und erhalte die Ergebnisse
-        result = await CompanyEditorOperations(db_session).analyse_img(token, lat, long, file)
+        result = await CompanyEditorOperations(db_session).analyse_img(upload_request["token"], upload_request["lat"], upload_request["long"], file)
 
         # Rückgabe der Analyseergebnisse als JSON
         return JSONResponse(content=result)
@@ -131,8 +130,33 @@ async def upload_img(
 
 
 
-{
-    "object": "car",
-    "confidence": 0.9,
-    "status": "ture"
-}
+"""
+{   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlMDAzMzcyZS04ZjM2LTQ0NzYtOTU4OS0wNDE3YjgwZDM3MmEiLCJleHAiOjE3MzYzNzI1OTF9._2I4eqD7FM2_eV20SNMlY4OqfGu82l9_cMm-rgXa_58", 
+   "lat": 53.129516298446800,  
+     "long":8.865362692023670
+ }
+
+"""
+
+@companyeditor_router.put("/update/img_coordinate")
+async def update_img_coordinate(
+    db_session: Annotated[AsyncSession, Depends(get_db)],
+    update_img_request: str= Form(...),
+    file: UploadFile = File(...)
+):
+    try:
+        update_request = UpdateImgRequest.model_validate_json(update_img_request).model_dump()
+        result = await CompanyEditorOperations(db_session).update_coord_img(update_request["token"], update_request["lat"], update_request["long"], update_request["oldOriginalImgUrl"], update_request["oldAnalyzedImgUrl"], file)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
+    
+
+"""
+    {  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlMDAzMzcyZS04ZjM2LTQ0NzYtOTU4OS0wNDE3YjgwZDM3MmEiLCJleHAiOjE3MzYzNzI1OTF9._2I4eqD7FM2_eV20SNMlY4OqfGu82l9_cMm-rgXa_58", 
+    "lat": 53.129516298446800,  
+    "long":8.865362692023670,
+    "oldOriginalImgUrl":"/static/images/original/7a092857-4e0d-47af-a9d6-a0ae87d59adb.jpg",
+    "oldAnalyzedImgUrl":"/static/images/analyse/c95be6d1-f721-4a12-bed6-09babe73aa51.jpg"
+    }
+"""
