@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 import sqlalchemy as sa
 from fastapi import UploadFile, File, HTTPException
-from db.models import Company_Editor, Project, City, City_Street, Street, Coordinate, Notification
+from db.models import Company_Editor, Project, City, City_Street, Street, Coordinate, Notification, Telekom_Editor
 from uuid import UUID
 import tempfile
 from fastapi.responses import StreamingResponse
@@ -125,9 +125,9 @@ class CompanyEditorOperations:
     async def analyse_img(self, token: str, lat: float, long: float, file: UploadFile) -> dict:
         editor_id = UUID(get_user_id_from_token(token))
 
+        # Abfragen für Company_Editor, Coordinate und zugehöriges Projekt
         query_editor = sa.select(Company_Editor).where(Company_Editor.id == editor_id)
         query_coord = sa.select(Coordinate).where(Coordinate.latitude == lat, Coordinate.longitude == long)
-        query_notification = sa.select(Notification).options(joinedload(Notification.coordinate)).where(Notification.coordinate_id == query_coord.id)
 
         async with self.db_session as session:
             editor = await session.scalar(query_editor)
@@ -142,12 +142,12 @@ class CompanyEditorOperations:
                 tmp_file_path = tmp_file.name
 
             try:
+                # Analysiere das Bild
                 analysed_image, detected_objects = analyse_imgs(tmp_file_path)
 
                 # Originalbild speichern
                 original_filename = f"{uuid4()}.jpg"
                 original_filepath = os.path.join(ORIGINAL_DIR, original_filename)
-
                 shutil.move(tmp_file_path, original_filepath)
 
                 # Analysiertes Bild speichern
@@ -163,12 +163,51 @@ class CompanyEditorOperations:
                 # Datenbank aktualisieren
                 coord_obj.original_image_url = original_image_url
                 coord_obj.analysed_image_url = analysed_image_url
-                coord_obj.result_materiallist= detected_objects
+                coord_obj.result_materiallist = detected_objects
 
+                # Projekt abrufen
+                project_query = sa.select(Project).where(Project.company_editor_id == editor.id)
+                project = await session.scalar(project_query)
 
-                for object in detected_objects:
-                    if object["status"] == False:
-                        notification = await session.scalar(query_notification)
+                if not project:
+                    raise HTTPException(status_code=404, detail="Project not found.")
+
+                # Überprüfen, ob Benachrichtigungen nötig sind
+                for obj in detected_objects:
+                    if obj["status"] == False:
+                        # Telekom-Editor abrufen
+                        telekom_editor_query = sa.select(Telekom_Editor).where(Telekom_Editor.id == project.telekom_editor_id)
+                        telekom_editor = await session.scalar(telekom_editor_query)
+
+                        if not telekom_editor:
+                            raise HTTPException(status_code=404, detail="Telekom Editor not found.")
+
+                        # Stadt- und Straßeninformationen abrufen
+                        city_query = sa.select(City).where(City.id == project.city_id)
+                        city = await session.scalar(city_query)
+
+                        street_query = sa.select(Street).where(Street.id == coord_obj.street_id)
+                        street = await session.scalar(street_query)
+
+                        # Benachrichtigung erstellen (JSON)
+                        notification_message = {
+                            "project_name": project.project_name,
+                            "city": city.city_name if city else "N/A",
+                            "street": street.street_name if street else "N/A",
+                            "company_editor": editor.editor_email,
+                            "latitude": float(coord_obj.latitude),
+                            "longitude": float(coord_obj.longitude),
+                            "analysed_image_url": analysed_image_url,
+                            "objects": obj,
+                        }
+
+                        notification = Notification(
+                            message=notification_message,
+                            coordinate_id=coord_obj.id,
+                            telekom_editor_id=telekom_editor.id
+                        )
+                        session.add(notification)
+
                 await session.commit()
 
                 # Rückgabe der Analyseergebnisse und Bild-URLs
@@ -176,6 +215,7 @@ class CompanyEditorOperations:
                     "detected_objects": detected_objects,
                     "original_image_url": original_image_url,
                     "analysed_image_url": analysed_image_url,
+                    "notification": notification_message
                 }
 
             except Exception as e:

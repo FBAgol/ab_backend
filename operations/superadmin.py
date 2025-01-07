@@ -1,10 +1,13 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from db.models import Super_Admin, Company_Editor, Telekom_Editor, Company, Project, City, Street, City_Street, Coordinate, Notification
-from typing import List
 import sqlalchemy as sa
 from sqlalchemy.orm import joinedload, selectinload
 from uuid import UUID
+
+from db.models import Super_Admin, Company_Editor, Telekom_Editor, Company, Project, City, Street, City_Street, Coordinate, Notification
 from db import Hash
+
+
+
 class SuperAdminOperations:
     def __init__(self, db_session: AsyncSession)->None: 
         self.db_session = db_session

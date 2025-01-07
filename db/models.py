@@ -133,7 +133,7 @@ class Coordinate(Base):
 
 class Notification(Base):
     __tablename__ = "notification"
-    message: Mapped[str] = mapped_column(String(255), nullable=False) # projektname + coord+ city + street + company editor + analysiertes bild + confidence
+    message: Mapped[dict] = mapped_column(JSON, nullable=False) # projektname + coord+ city + street + company editor + analysiertes bild + confidence
     coordinate_id: Mapped[UUID] = mapped_column(ForeignKey("coordinate.id"))
     telekom_editor_id: Mapped[UUID] = mapped_column(ForeignKey("telekom_editor.id"))
     coordinate: Mapped[Coordinate] = relationship("Coordinate", back_populates="notification", init=False, lazy="joined")
