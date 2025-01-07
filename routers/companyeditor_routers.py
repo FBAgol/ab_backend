@@ -1,13 +1,14 @@
 from fastapi import APIRouter, HTTPException, Depends, status, Body, File, UploadFile
-from starlette.responses import StreamingResponse, JSONResponse
-from pydantic import ValidationError
-from typing import Annotated, List
+from starlette.responses import JSONResponse
+from typing import Annotated
+from datetime import timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from operations.company_editor import CompanyEditorOperations
 from db.engine import get_db
-from schemas._input import Editor_regist , Login, ProjectInfo
+from schemas._input import Editor_regist , Login
 from jwt_utils import create_access_token, create_refresh_token
-from datetime import timedelta
+
 
 
 companyeditor_router = APIRouter()

@@ -107,16 +107,11 @@ def analyse_imgs(img):
     """
 
 
-# Funktion für die YOLO-Bildanalyse
 def analyse_imgs(img_path):
-    # Modellpfad definieren
     model_path = '/app/NT_O_Detection_v3_800/NT_O3/NT_O_Detection3/runs/detect/train/weights/best.pt'
     model = YOLO(model_path)
 
-    # Bild lesen
     image = cv2.imread(img_path)
-
-    # Inferenz durchführen
     results = model(image, conf=0.3)
 
     # Überprüfe die Rückgabewerte
@@ -125,7 +120,6 @@ def analyse_imgs(img_path):
     classes = results[0].boxes.cls
     class_names = model.model.names  # Zugriff auf die Klassennamen
 
-    # Liste zur Speicherung der erkannten Klassen und deren Wahrscheinlichkeiten (ohne Positionen)
     detected_objects = []
 
     # Boxen und Texte zeichnen
@@ -140,17 +134,17 @@ def analyse_imgs(img_path):
         cv2.putText(image, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
         # Füge nur die Klassennamen und die Wahrscheinlichkeit (Confidence) hinzu
-        if float(score) > 0.7:
+        if float(score) >= 0.7:
             detected_objects.append({
                 'object': class_names[int(cls)],
                 'confidence': float(score)*100,
-                'status': True  # Die Wahrscheinlichkeit in einen Float konvertieren
+                'status': True 
             })
         else:
             detected_objects.append({
                 'object': class_names[int(cls)],
                 'confidence': float(score)*100,
-                'status': False  # Die Wahrscheinlichkeit in einen Float konvertieren
+                'status': False 
             })
 
     # Bild in einen BytesIO-Puffer schreiben

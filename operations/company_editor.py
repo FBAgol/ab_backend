@@ -2,18 +2,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 import sqlalchemy as sa
 from fastapi import UploadFile, File, HTTPException
-from db.models import Company_Editor, Project, City, City_Street, Street, Coordinate, Notification, Telekom_Editor
-from uuid import UUID
+from uuid import UUID, uuid4
 import tempfile
-from fastapi.responses import StreamingResponse
 import os
 import shutil
-from io import BytesIO
+
+from db.models import Company_Editor, Project, City, City_Street, Street, Coordinate, Notification, Telekom_Editor
 from db import Hash 
 from convert_to_dict import to_dict
 from jwt_utils import get_user_id_from_token
 from NT_O_Detection_v3_800.anaylse_img import analyse_imgs
-from uuid import UUID, uuid4
+
 
 
 # Verzeichnisse für Bilder
@@ -121,11 +120,12 @@ class CompanyEditorOperations:
                 return "Editor not found."
         except Exception as e:
             raise Exception(f"Error getting project info: {str(e)}")
+        
+
     
     async def analyse_img(self, token: str, lat: float, long: float, file: UploadFile) -> dict:
         editor_id = UUID(get_user_id_from_token(token))
 
-        # Abfragen für Company_Editor, Coordinate und zugehöriges Projekt
         query_editor = sa.select(Company_Editor).where(Company_Editor.id == editor_id)
         query_coord = sa.select(Coordinate).where(Coordinate.latitude == lat, Coordinate.longitude == long)
 
@@ -142,7 +142,6 @@ class CompanyEditorOperations:
                 tmp_file_path = tmp_file.name
 
             try:
-                # Analysiere das Bild
                 analysed_image, detected_objects = analyse_imgs(tmp_file_path)
 
                 # Originalbild speichern
@@ -165,7 +164,6 @@ class CompanyEditorOperations:
                 coord_obj.analysed_image_url = analysed_image_url
                 coord_obj.result_materiallist = detected_objects
 
-                # Projekt abrufen
                 project_query = sa.select(Project).where(Project.company_editor_id == editor.id)
                 project = await session.scalar(project_query)
 
@@ -175,14 +173,12 @@ class CompanyEditorOperations:
                 # Überprüfen, ob Benachrichtigungen nötig sind
                 for obj in detected_objects:
                     if obj["status"] == False:
-                        # Telekom-Editor abrufen
                         telekom_editor_query = sa.select(Telekom_Editor).where(Telekom_Editor.id == project.telekom_editor_id)
                         telekom_editor = await session.scalar(telekom_editor_query)
 
                         if not telekom_editor:
                             raise HTTPException(status_code=404, detail="Telekom Editor not found.")
 
-                        # Stadt- und Straßeninformationen abrufen
                         city_query = sa.select(City).where(City.id == project.city_id)
                         city = await session.scalar(city_query)
 
@@ -210,7 +206,6 @@ class CompanyEditorOperations:
 
                 await session.commit()
 
-                # Rückgabe der Analyseergebnisse und Bild-URLs
                 return {
                     "detected_objects": detected_objects,
                     "original_image_url": original_image_url,
@@ -219,7 +214,6 @@ class CompanyEditorOperations:
                 }
 
             except Exception as e:
-                # Fehlerbehandlung und temporäre Dateien löschen
                 raise HTTPException(status_code=500, detail=f"Error during image analysis: {str(e)}")
 
             finally:

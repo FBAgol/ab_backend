@@ -1,22 +1,18 @@
 import jwt
-from datetime import datetime, timedelta, timezone  # Importiere 'timezone'
+from datetime import datetime, timedelta, timezone 
 from typing import Optional
 from fastapi import HTTPException, status
 from .config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_DAYS
 from jwt.exceptions import ExpiredSignatureError, DecodeError
 
 
-SECRET_KEY="edit_land"
-ALGORITHM="HS256"
-ACCESS_TOKEN_EXPIRE_DAYS = 1 
 
-# Hilfsfunktion: Erstelle das Access-Token mit 1 Tag Ablaufzeit
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()  # Daten aus dem Payload kopieren
     if expires_delta:
-        expire = datetime.now(tz=timezone.utc) + expires_delta  # Korrigierte Zeile
+        expire = datetime.now(tz=timezone.utc) + expires_delta  
     else:
-        expire = datetime.now(tz=timezone.utc) + timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)  # Ablaufzeit auf 1 Tag setzen
+        expire = datetime.now(tz=timezone.utc) + timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS) 
     to_encode.update({"exp": expire})  # Ablaufzeit im Payload hinzufügen
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)  # Token kodieren
     return encoded_jwt
@@ -25,14 +21,13 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 def create_refresh_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.now(tz=timezone.utc) + expires_delta  # Korrigierte Zeile
+        expire = datetime.now(tz=timezone.utc) + expires_delta 
     else:
         expire = datetime.now(tz=timezone.utc) + timedelta(days=7)  # Ablaufzeit für Refresh-Token: 7 Tage
     to_encode.update({"exp": expire})  # Ablaufzeit im Payload hinzufügen
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)  # Token kodieren
     return encoded_jwt
 
-# Hilfsfunktion: Verifiziere das Token
 
 def verify_token(token: str) -> dict:
     try:

@@ -43,12 +43,10 @@ async def create_editors_projects(
         project=await SuperAdminOperations(db_session).create_project(editors["project_name"], company_editor.id, telekom_editor.id, city.id)
         
 
-        # Rückgabe der verarbeiteten Daten
         return {
             "editors": editors,
             "headers": exel_converter["headers"],
-            #"rows": exel_converter["data"],
-            "file": exel_converter
+            "rows": exel_converter["data"],
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
