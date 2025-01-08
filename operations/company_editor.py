@@ -226,13 +226,6 @@ class CompanyEditorOperations:
                     os.remove(tmp_file_path)
     
 
-# 1- newFile should be analysed and saved in orginal and analyse folder-->  done
-#2- old img in original and analyse folder should be deleted--> done 
-#3- if there is notification for this coordinate, it should be deleted --> done 
-# 4- old analyse_img_url and original_img_url should be updated in the database and result_materiallist should be updated
-#
-
-#5- if there is  notification for this new file, it should be added in notification table --> done
 
         
     async def update_coord_img(self, token: str, lat: float, long: float, oldOriginalImgUrl: str, oldAnalyseImgUrl: str, newFile: UploadFile) -> None:

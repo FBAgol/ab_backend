@@ -74,6 +74,21 @@ async def login_company_editor(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error during login: {str(e)}")
     
+@telekomeditor_router.put("/update_status_img")
+async def update_status_img(
+    db_session: Annotated[AsyncSession, Depends(get_db)],
+    token: str,
+    status: bool,
+    objekt: str
+):
+    try:
+        update_status= await TelekomEditorOperations(db_session).update_status_img(token, status, objekt)
+        if not update_status:
+            raise HTTPException(status_code=404, detail="Image not found.")
+        return{"result": update_status} 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating image status: {str(e)}")
+    
 """
 
 {

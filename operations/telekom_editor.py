@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.orm.attributes import flag_modified
 import sqlalchemy as sa
 from fastapi import UploadFile, File, HTTPException
 from uuid import UUID, uuid4
@@ -63,3 +64,87 @@ class TelekomEditorOperations:
                 return "Invalid email."
         except Exception as e:
             raise Exception(f"Error logging in: {str(e)}")
+
+    async def update_status_img(self, token: str, status: bool, objekt: str):
+        editor_id = UUID(get_user_id_from_token(token))
+        if not editor_id:
+            raise HTTPException(status_code=401, detail="Telekom Editor not found.")
+        
+        editor_query = sa.select(Telekom_Editor).where(Telekom_Editor.id == editor_id)
+        async with self.db_session as session:
+            editor = await session.scalar(editor_query)
+            if not editor:
+                raise HTTPException(status_code=404, detail="Editor not found.")
+            
+            notification_query = sa.select(Notification).options(
+                selectinload(Notification.coordinate), 
+                selectinload(Notification.telekom_editor)
+            ).where(Notification.telekom_editor_id == editor.id)
+            
+            delet_notification_query = sa.delete(Notification).where(
+                Notification.telekom_editor_id == editor.id
+            )
+            
+            if status:
+                notifications = await session.scalars(notification_query)
+                notifications = notifications.all()
+                for notification in notifications:
+                    coord_query = sa.select(Coordinate).where(Coordinate.id == notification.coordinate_id)
+                    coord = await session.scalar(coord_query)
+                    
+                    if not coord:
+                        raise HTTPException(status_code=404, detail="Coordinate not found.")
+                    
+                    materiallist = coord.result_materiallist  # Lade die Materialliste
+                    updated = False
+                    
+                    for material in materiallist:
+                        if material["object"] == objekt:  # Finde das passende Objekt
+                            material["status"] = status   # Status aktualisieren
+                            coord.result_materiallist = materiallist[:]  # JSON-Feld explizit neu zuweisen
+                            flag_modified(coord, "result_materiallist")  # SQLAlchemy Änderungen mitteilen
+                            session.add(coord)  # Objekt zur Session hinzufügen
+                            updated = True
+                            break
+                    
+                    if updated:
+                        await session.execute(delet_notification_query)  # Lösche die Notification
+                        break
+                
+                await session.commit()  # Änderungen bestätigen
+        
+        return "Status updated successfully."
+
+
+
+"""
+[
+    {
+        "object": "NT-Gehause",
+        "status": true,
+        "confidence": 92.43764281272888
+    }
+]
+"""
+
+
+"""
+{
+    "city": "Bremen",
+    "street": "Oberblockland 2",
+    "objects": {
+        "object": "Orang-Speednetrohrchen",
+        "status": false,
+        "confidence": 51.210564374923706
+    },
+    "latitude": 53.1299169,
+    "longitude": 8.86437022,
+    "project_name": "telMax",
+    "company_editor": "max@baumax.de",
+    "analysed_image_url": "/static/images/analyse/46a3fcc3-31e1-4cd9-a0b3-1a82e96722b9.jpg"
+}
+"""
+
+
+
+

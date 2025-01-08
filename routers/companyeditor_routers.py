@@ -131,7 +131,7 @@ async def upload_img(
 
 
 """
-{   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlMDAzMzcyZS04ZjM2LTQ0NzYtOTU4OS0wNDE3YjgwZDM3MmEiLCJleHAiOjE3MzY0MTc5Nzh9.HYzFmH0O9yOJVzFWXUkPgnS9kPKP1tKuORiMi0oj0Fg", 
+{   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlMDAzMzcyZS04ZjM2LTQ0NzYtOTU4OS0wNDE3YjgwZDM3MmEiLCJleHAiOjE3MzY0NDg1Njl9.AQ9W0hpDBy2xZDj54oSGcN4mQvgZrJHCKQUXVneK_Dw", 
    "lat": 53.129916900000000,  
      "long":8.864370220000000
  }
@@ -153,9 +153,9 @@ async def update_img_coordinate(
     
 
 """
-    {  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlMDAzMzcyZS04ZjM2LTQ0NzYtOTU4OS0wNDE3YjgwZDM3MmEiLCJleHAiOjE3MzYzNzI1OTF9._2I4eqD7FM2_eV20SNMlY4OqfGu82l9_cMm-rgXa_58", 
-    "lat": 53.129516298446800,  
-    "long":8.865362692023670,
+    {  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlMDAzMzcyZS04ZjM2LTQ0NzYtOTU4OS0wNDE3YjgwZDM3MmEiLCJleHAiOjE3MzY0NDg1Njl9.AQ9W0hpDBy2xZDj54oSGcN4mQvgZrJHCKQUXVneK_Dw", 
+    "lat": 53.129916900000000,  
+    "long":8.864370220000000,
     "oldOriginalImgUrl":"/static/images/original/7a092857-4e0d-47af-a9d6-a0ae87d59adb.jpg",
     "oldAnalyzedImgUrl":"/static/images/analyse/c95be6d1-f721-4a12-bed6-09babe73aa51.jpg"
     }
