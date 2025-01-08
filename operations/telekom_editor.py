@@ -2,17 +2,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy.orm.attributes import flag_modified
 import sqlalchemy as sa
-from fastapi import UploadFile, File, HTTPException
-from uuid import UUID, uuid4
-import tempfile
-import os
-import shutil
+from fastapi import  HTTPException
+from uuid import UUID
 
-from db.models import Company_Editor, Project, City, City_Street, Street, Coordinate, Notification, Telekom_Editor
+from db.models import  Coordinate, Notification, Telekom_Editor
 from db import Hash 
 from convert_to_dict import to_dict
 from jwt_utils import get_user_id_from_token
-from NT_O_Detection_v3_800.anaylse_img import analyse_imgs
 
 
 
@@ -95,23 +91,23 @@ class TelekomEditorOperations:
                     if not coord:
                         raise HTTPException(status_code=404, detail="Coordinate not found.")
                     
-                    materiallist = coord.result_materiallist  # Lade die Materialliste
+                    materiallist = coord.result_materiallist 
                     updated = False
                     
                     for material in materiallist:
-                        if material["object"] == objekt:  # Finde das passende Objekt
-                            material["status"] = status   # Status aktualisieren
-                            coord.result_materiallist = materiallist[:]  # JSON-Feld explizit neu zuweisen
+                        if material["object"] == objekt:  
+                            material["status"] = status   
+                            coord.result_materiallist = materiallist[:] 
                             flag_modified(coord, "result_materiallist")  # SQLAlchemy Änderungen mitteilen
                             session.add(coord)  # Objekt zur Session hinzufügen
                             updated = True
                             break
                     
                     if updated:
-                        await session.execute(delet_notification_query)  # Lösche die Notification
+                        await session.execute(delet_notification_query) 
                         break
                 
-                await session.commit()  # Änderungen bestätigen
+                await session.commit()
         
         return "Status updated successfully."
 
@@ -126,25 +122,5 @@ class TelekomEditorOperations:
     }
 ]
 """
-
-
-"""
-{
-    "city": "Bremen",
-    "street": "Oberblockland 2",
-    "objects": {
-        "object": "Orang-Speednetrohrchen",
-        "status": false,
-        "confidence": 51.210564374923706
-    },
-    "latitude": 53.1299169,
-    "longitude": 8.86437022,
-    "project_name": "telMax",
-    "company_editor": "max@baumax.de",
-    "analysed_image_url": "/static/images/analyse/46a3fcc3-31e1-4cd9-a0b3-1a82e96722b9.jpg"
-}
-"""
-
-
 
 
