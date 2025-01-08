@@ -96,3 +96,19 @@ async def update_status_img(
     "password":"telekom"
 }
 """
+
+
+@telekomeditor_router.get("/projectname/{projectname}")
+async def get_projects_info(
+    db_session: Annotated[AsyncSession, Depends(get_db)],
+    editor_token: str,
+    projectname: str
+)-> dict:
+    try:
+        projects = await TelekomEditorOperations(db_session).get_projects_info(editor_token, projectname)
+        if isinstance(projects, str):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=projects)
+        
+        return projects
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")

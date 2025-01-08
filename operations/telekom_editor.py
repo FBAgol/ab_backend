@@ -5,7 +5,7 @@ import sqlalchemy as sa
 from fastapi import  HTTPException
 from uuid import UUID
 
-from db.models import  Coordinate, Notification, Telekom_Editor
+from db.models import  Coordinate, Notification, Telekom_Editor, Project, City, City_Street, Street
 from db import Hash 
 from convert_to_dict import to_dict
 from jwt_utils import get_user_id_from_token
@@ -110,7 +110,61 @@ class TelekomEditorOperations:
                 await session.commit()
         
         return "Status updated successfully."
+    
 
+
+    async def get_projects_info(self, editor_token: str, projectname: str) -> dict | str:
+        editor_id = UUID(get_user_id_from_token(editor_token))
+        #print("editor_id is:   ",editor_id)
+        try:
+            query = (
+                sa.select(Telekom_Editor)
+                .options(
+                    selectinload(Telekom_Editor.projects)
+                    .selectinload(Project.city)
+                    .selectinload(City.city_streets)
+                    .selectinload(City_Street.street)
+                    .selectinload(Street.coordinates)
+                )
+                .where(Telekom_Editor.id == editor_id)
+            )
+            
+            async with self.db_session as session:
+                editor = await session.scalar(query)
+                if editor:
+                    for project in editor.projects:
+                        if project.project_name == projectname:
+                            # Extrahiere alle gewünschten Informationen
+                            city = project.city
+                            streets = [
+                                {
+                                    "street_name": street.street_name,
+                                    "coordinates_ZoneId": [
+                                        {   "zone_id": coord.zone_id,
+                                            "latitude": coord.latitude,
+                                            "longitude": coord.longitude,
+                                            "target_material": coord.result_materiallist,
+                                            "result_materiallist": coord.result_materiallist,
+                                            "original_image_url": coord.original_image_url,
+                                            "analysed_image_url": coord.analysed_image_url,
+                                        }
+                                        for coord in street.coordinates
+                                    ],
+                                }
+                                for city_street in city.city_streets
+                                for street in [city_street.street]
+                            ]
+                            
+                            project_info = {
+                                "project_name": project.project_name,
+                                "city": city.city_name if city else None,
+                                "streets": streets,
+                            }
+                            return project_info
+                    return "Project not found."
+                return "Editor not found."
+        except Exception as e:
+            raise Exception(f"Error getting project info: {str(e)}")
 
 
 """
