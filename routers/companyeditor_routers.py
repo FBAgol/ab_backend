@@ -19,7 +19,7 @@ async def register_company_Editor(
     company_editor: Editor_regist= Body(...),
 )-> dict:
     try:
-        editor = await CompanyEditorOperations(db_session).registration(company_editor.secret_key, company_editor.email, company_editor.password)
+        editor = await CompanyEditorOperations(db_session).registration(company_editor.secret_key, company_editor.email, company_editor.password, company_editor.role)
         
         if isinstance(editor, str): 
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=editor)
@@ -42,7 +42,8 @@ async def register_company_Editor(
 {
     "secret_key":"string456",
     "email":"max@baumax.de",
-    "password":"maxbauman"
+    "password":"maxbauman",
+    "role":1
 }
 """
 
@@ -54,7 +55,7 @@ async def login_company_editor(
     editor_login: Login
 )-> dict:
     try:
-        editor = await CompanyEditorOperations(db_session).login(editor_login.email, editor_login.password)
+        editor = await CompanyEditorOperations(db_session).login(editor_login.email, editor_login.password, editor_login.role)
         
         if isinstance(editor, str):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=editor)
@@ -77,7 +78,8 @@ async def login_company_editor(
 
 {
     "email":"max@baumax.de",
-    "password":"maxbauman"
+    "password":"maxbauman",
+    "role":1
 }
 """
 
@@ -131,7 +133,7 @@ async def upload_img(
 
 
 """
-{   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlMDAzMzcyZS04ZjM2LTQ0NzYtOTU4OS0wNDE3YjgwZDM3MmEiLCJleHAiOjE3MzY0NDg1Njl9.AQ9W0hpDBy2xZDj54oSGcN4mQvgZrJHCKQUXVneK_Dw", 
+{   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmNWU5NjdiNC0xYzI3LTQwM2QtOGYzMy1mZDNiY2M4NWM3MjMiLCJleHAiOjE3MzY1ODY0NTN9.rrqde5m2hmIhAfGNzkIIdGAtemdOec4Y5PncTfYTJPU", 
    "lat": 53.129916900000000,  
      "long":8.864370220000000
  }

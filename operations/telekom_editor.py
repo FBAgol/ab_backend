@@ -19,14 +19,14 @@ class TelekomEditorOperations:
         self.hash= Hash()
 
     
-    async def registration(self, secret_key: str, email: str, password: str) -> Telekom_Editor| str:
+    async def registration(self, secret_key: str, email: str, password: str, role:int) -> Telekom_Editor| str:
         query = sa.select(Telekom_Editor).where(Telekom_Editor.email == email)
         
         async with self.db_session as session:
             try:
                 editor = await session.scalar(query)
 
-                if not editor or self.hash.verify(editor.secret_key, secret_key)!=True:
+                if not editor or self.hash.verify(editor.secret_key, secret_key)!=True and editor.role!=role:
                     return "Invalid secret key or email."
                 
                 if editor.password and self.hash.verify(editor.password, password):
@@ -42,13 +42,13 @@ class TelekomEditorOperations:
             except Exception as e:
                 raise Exception(f"Unexpected error occurred: {e}")
 
-    async def login(self, email:str, password:str)-> dict | str:
+    async def login(self, email:str, password:str, role:int)-> dict | str:
         try:
             editor_query= sa.select(Telekom_Editor).options(selectinload(Telekom_Editor.projects), joinedload(Telekom_Editor.super_admin), selectinload(Telekom_Editor.notifications)).where(Telekom_Editor.email==email)
             async with self.db_session as session:
                 editor = await session.scalar(editor_query)
                 if editor:
-                    if self.hash.verify(editor.password, password):
+                    if self.hash.verify(editor.password, password) and editor.role==role:  
                         notification_query= sa.select(Notification).options(selectinload(Notification.telekom_editor), selectinload(Notification.coordinate)).where(Notification.telekom_editor_id==editor.id)
                         notifications= await session.scalars(notification_query)
                         list_notifications= [notification.message for notification in notifications]
@@ -56,7 +56,7 @@ class TelekomEditorOperations:
                             "notifications": list_notifications,
                             "editor_id":to_dict(editor),
                         }
-                    return "Invalid password."
+                    return "Invalid password or role."
                 return "Invalid email."
         except Exception as e:
             raise Exception(f"Error logging in: {str(e)}")

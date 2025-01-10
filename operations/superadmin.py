@@ -1,10 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 import sqlalchemy as sa
-from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.orm import  selectinload
 from uuid import UUID
 
 from db.models import Super_Admin, Company_Editor, Telekom_Editor, Company, Project, City, Street, City_Street, Coordinate, Notification
 from db import Hash
+from convert_to_dict import to_dict
 
 
 
@@ -12,6 +13,22 @@ class SuperAdminOperations:
     def __init__(self, db_session: AsyncSession)->None: 
         self.db_session = db_session
         self.hash= Hash()
+
+    async def login(self, email:str, password:str, role:int)-> dict | str:
+        try:
+            editor_query= sa.select(Super_Admin).options(selectinload(Super_Admin.companys), selectinload(Super_Admin.telekom_editors)).where(Super_Admin.email==email)
+            async with self.db_session as session:
+                editor = await session.scalar(editor_query)
+                if editor:
+                    if self.hash.verify(editor.password, password) and editor.role==role: 
+                        return {
+                            "editor_id":to_dict(editor),
+                        }
+                    return "Invalid password or role."
+                return "Invalid email."
+        except Exception as e:
+            raise Exception(f"Error logging in: {str(e)}")
+        
 
     async def create_superadmin(self, email:str, password:str)-> Super_Admin:
         try:

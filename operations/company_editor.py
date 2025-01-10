@@ -29,15 +29,15 @@ class CompanyEditorOperations:
         self.hash= Hash()
 
     
-    async def registration(self, secret_key: str, email: str, password: str) -> Company_Editor| str:
+    async def registration(self, secret_key: str, email: str, password: str, role:int) -> Company_Editor| str:
         query = sa.select(Company_Editor).where(Company_Editor.editor_email == email)
         
         async with self.db_session as session:
             try:
                 editor = await session.scalar(query)
 
-                if not editor or self.hash.verify(editor.secret_key, secret_key)!=True:
-                    return "Invalid secret key or email."
+                if not editor or self.hash.verify(editor.secret_key, secret_key)!=True and editor.role != role:
+                    return "Invalid secret key or email or role."
                 
                 if editor.password and self.hash.verify(editor.password, password):
                     return "A password already exists for this editor."
@@ -52,14 +52,14 @@ class CompanyEditorOperations:
             except Exception as e:
                 raise Exception(f"Unexpected error occurred: {e}")
 
-    async def login(self, email:str, password:str)-> dict | str:
+    async def login(self, email:str, password:str, role:int)-> dict | str:
         try:
             query= sa.select(Company_Editor).options(selectinload(Company_Editor.projects), joinedload(Company_Editor.company)).where(Company_Editor.editor_email==email)
 
             async with self.db_session as session:
                 editor = await session.scalar(query)
                 if editor:
-                    if self.hash.verify(editor.password, password):
+                    if self.hash.verify(editor.password, password) and editor.role == role:
                         list_projecnamen= [project.project_name for project in editor.projects]
                         return {
                             "company_name": editor.company.company_name,

@@ -20,7 +20,7 @@ async def register_telekom_Editor(
     telekom_editor: Editor_regist= Body(...),
 )-> dict:
     try:
-        editor = await TelekomEditorOperations(db_session).registration(telekom_editor.secret_key, telekom_editor.email, telekom_editor.password)
+        editor = await TelekomEditorOperations(db_session).registration(telekom_editor.secret_key, telekom_editor.email, telekom_editor.password,telekom_editor.role)
         
         if isinstance(editor, str): 
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=editor)
@@ -43,19 +43,20 @@ async def register_telekom_Editor(
 {
     "secret_key":"string123",
     "email":"golzari@telekom.de",
-    "password":"telekom"
+    "password":"telekom",
+    "role":2
 }
 """
 
 
 
 @telekomeditor_router.post("/login")
-async def login_company_editor(
+async def login_telekom_editor(
     db_session: Annotated[AsyncSession, Depends(get_db)],
     editor_login: Login
 )-> dict:
     try:
-        editor = await TelekomEditorOperations(db_session).login(editor_login.email, editor_login.password)
+        editor = await TelekomEditorOperations(db_session).login(editor_login.email, editor_login.password, editor_login.role)
         print("editor info ",editor)
         
         if isinstance(editor, str):
@@ -91,10 +92,11 @@ async def update_status_img(
     
 """
 
-{
-    "email":"golzari@telekom.de",
-    "password":"telekom"
-}
+    {
+        "email":"golzari@telekom.de",
+        "password":"telekom",
+        "role":2
+    }
 """
 
 

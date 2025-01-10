@@ -89,6 +89,9 @@ passlib = "^1.7.4"
 python-dotenv = "^1.0.1"
 pyjwt = "^2.10.1"
 aiofiles = "^24.1.0"
+fastapi-socketio = "^0.0.10"
+eventlet = "^0.38.2"
+python-socketio = "^5.12.1"
 
 
 [build-system]

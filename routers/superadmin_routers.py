@@ -1,18 +1,52 @@
 import json
-from fastapi import APIRouter, UploadFile, File, HTTPException, Form, Depends
+from fastapi import APIRouter, UploadFile, File, HTTPException, Form, Depends, status
 from pydantic import ValidationError
 from typing import Annotated
 from sqlalchemy.ext.asyncio import AsyncSession
+from datetime import timedelta
+
 from operations.superadmin import SuperAdminOperations
 from db.engine import get_db
-from schemas._input import ManagementInfo
+from schemas._input import ManagementInfo, Login
 from exel_conver import convert_excel_to_list as exel_convert
+from jwt_utils import create_access_token, create_refresh_token
 
 
 
 superadmin_router = APIRouter()
 
+@superadmin_router.post("/login")
+async def login_telekom_editor(
+    db_session: Annotated[AsyncSession, Depends(get_db)],
+    editor_login: Login
+)-> dict:
+    try:
+        editor = await SuperAdminOperations(db_session).login(editor_login.email, editor_login.password, editor_login.role)
+        print("editor info ",editor)
+        
+        if isinstance(editor, str):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=editor)
+        
+        access_token = create_access_token(data={"sub": str(editor["editor_id"]["id"])}, expires_delta=timedelta(days=1)) 
+        refresh_token = create_refresh_token(data={"sub": str(editor["editor_id"]["id"])}, expires_delta=timedelta(days=7))
 
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer",
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
+    
+
+"""
+{
+"email": "farzad@gmail.com",
+"password": "farzad",
+""role": 0
+}
+"""
+    
 @superadmin_router.post("/")
 async def create_editors_projects(
     db_session: Annotated[AsyncSession, Depends(get_db)],

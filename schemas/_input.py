@@ -19,6 +19,7 @@ class Editor_regist(BaseModel):
     secret_key:str
     email:str
     password:str
+    role:int
 
     class Config:
         orm_mode = True
@@ -26,6 +27,7 @@ class Editor_regist(BaseModel):
 class Login(BaseModel):
     email:str
     password:str
+    role:int
 
     class Config:
         orm_mode = True

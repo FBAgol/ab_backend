@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import ForeignKey, String, JSON,Integer, Numeric
+from sqlalchemy import ForeignKey, String, JSON,Integer, Numeric, INTEGER
 from uuid import UUID, uuid4
 from .engine import Base
 
@@ -8,6 +8,7 @@ class Super_Admin(Base):
     __tablename__ = "super_admin"
     email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True) 
     password: Mapped[str] = mapped_column(String(255), nullable=False)
+    role: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     companys: Mapped[list["Company"]] = relationship(
         "Company", back_populates="super_admin", cascade="all, delete-orphan", init=False, lazy="selectin"
@@ -38,12 +39,13 @@ class Company_Editor(Base):
     editor_email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)  
     secret_key: Mapped[str] = mapped_column(String(255), nullable=False)
     password: Mapped[str] = mapped_column(String(255), nullable=True, default=None)
+    role: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     company: Mapped["Company"] = relationship("Company", back_populates="company_editors", init=False, lazy="joined")
     projects: Mapped[list["Project"]] = relationship(
         "Project", back_populates="company_editor", cascade="all, delete-orphan", init=False, lazy="selectin"
     )
 
-    id: Mapped[UUID] = mapped_column( primary_key=True, default_factory=uuid4)
+    id: Mapped[UUID] = mapped_column( primary_key=True, default_factory=    uuid4)
 
 class Telekom_Editor(Base):
     __tablename__ = "telekom_editor"
@@ -51,6 +53,7 @@ class Telekom_Editor(Base):
     email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)  
     secret_key: Mapped[str] = mapped_column(String(255), nullable=False)
     password: Mapped[str] = mapped_column(String(255), nullable=True, default=None) 
+    role: Mapped[int] = mapped_column(Integer, nullable=False, default=2)
     super_admin: Mapped["Super_Admin"] = relationship("Super_Admin", back_populates="telekom_editors", init=False, lazy="joined")
     projects: Mapped[list["Project"]] = relationship(
         "Project", back_populates="telekom_editor", cascade="all, delete-orphan", init=False, lazy="selectin"
