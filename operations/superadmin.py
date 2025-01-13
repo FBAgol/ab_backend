@@ -14,6 +14,26 @@ class SuperAdminOperations:
         self.db_session = db_session
         self.hash= Hash()
 
+    async def registration( self,email: str, password: str, role:int) -> dict| str:
+        query = sa.select(Super_Admin).options(selectinload(Super_Admin.companys), selectinload(Super_Admin.telekom_editors)).where(Super_Admin.email == email)
+         
+        try:
+            async with self.db_session as session:
+                editor = await session.scalar(query)
+                if editor:
+                    return "Email already exists."
+                else:
+                    editor = Super_Admin(email=email, password=self.hash.bcrypt(password), role=role)
+                    session.add(editor)
+                    await session.commit()
+                    #await session.refresh(editor)
+                    editor = await session.scalar(query)
+                    return {"editor_id":to_dict(editor)}
+               
+
+        except Exception as e:
+            raise Exception(f"Unexpected error occurred: {e}")
+
     async def login(self, email:str, password:str, role:int)-> dict | str:
         try:
             editor_query= sa.select(Super_Admin).options(selectinload(Super_Admin.companys), selectinload(Super_Admin.telekom_editors)).where(Super_Admin.email==email)
