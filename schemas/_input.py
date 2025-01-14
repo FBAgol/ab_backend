@@ -3,7 +3,7 @@ from uuid import UUID
 from typing import List
 
 class  ManagementInfo(BaseModel):
-    superadmin_id:UUID
+    token:str
     company_name: str
     TelEditor_email: str
     TelEditor_secret_key: str

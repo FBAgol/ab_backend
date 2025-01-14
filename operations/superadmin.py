@@ -152,12 +152,20 @@ class SuperAdminOperations:
         
 
 
-    async def create_city(self, name: str) -> City:
+    async def create_city(self, superadin_id:UUID,name: str) -> City | str:
         try:
+            
+            super_admin_query = sa.select(Super_Admin).options(selectinload(Super_Admin.companys), selectinload(Super_Admin.telekom_editors)).where(Super_Admin.id == superadin_id)
+
             # nutzen wir joinedload, um auch die "projects"-Beziehung zu laden
             query = sa.select(City).where(City.city_name == name)
             
             async with self.db_session as session:
+                super_admin = await session.scalar(super_admin_query)  # Abfrage ausführen
+            
+                if not super_admin:  # Überprüfen, ob ein Super_Admin gefunden wurde
+                     return "Super Admin not found"
+                
                 city = await session.scalar(query)
                 if city:
                     return city
