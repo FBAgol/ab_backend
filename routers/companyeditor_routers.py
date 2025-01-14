@@ -17,13 +17,12 @@ companyeditor_router = APIRouter()
 async def register_company_Editor(
     db_session: Annotated[AsyncSession, Depends(get_db)],
     company_editor: Editor_regist= Body(...),
-)-> dict:
+)-> dict | str:
     try:
         editor = await CompanyEditorOperations(db_session).registration(company_editor.secret_key, company_editor.email, company_editor.password, company_editor.role)
         
         if isinstance(editor, str): 
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=editor)
-        
+            return editor        
         access_token = create_access_token(data={"sub": str(editor["id"])}, expires_delta=timedelta(days=1)) 
         refresh_token = create_refresh_token(data={"sub": str(editor["id"])}, expires_delta=timedelta(days=7))
         

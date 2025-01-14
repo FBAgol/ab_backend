@@ -18,12 +18,12 @@ telekomeditor_router = APIRouter()
 async def register_telekom_Editor(
     db_session: Annotated[AsyncSession, Depends(get_db)],
     telekom_editor: Editor_regist= Body(...),
-)-> dict:
+)-> dict | str:
     try:
         editor = await TelekomEditorOperations(db_session).registration(telekom_editor.secret_key, telekom_editor.email, telekom_editor.password,telekom_editor.role)
         
         if isinstance(editor, str): 
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=editor)
+            return editor
         
         access_token = create_access_token(data={"sub": str(editor["id"])}, expires_delta=timedelta(days=1)) 
         refresh_token = create_refresh_token(data={"sub": str(editor["id"])}, expires_delta=timedelta(days=7))
