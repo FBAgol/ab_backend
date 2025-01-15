@@ -1,12 +1,11 @@
-from fastapi import APIRouter, HTTPException, Depends, status, Body, File, UploadFile, Form
-from starlette.responses import JSONResponse
+from fastapi import APIRouter, HTTPException, Depends, status, Body, Header
 from typing import Annotated
 from datetime import timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from operations.telekom_editor import TelekomEditorOperations
 from db.engine import get_db
-from schemas._input import Editor_regist , Login, UploadImgRequest, UpdateImgRequest
+from schemas._input import Editor_regist , Login
 from jwt_utils import create_access_token, create_refresh_token
 
 
@@ -78,12 +77,12 @@ async def login_telekom_editor(
 @telekomeditor_router.put("/update_status_img")
 async def update_status_img(
     db_session: Annotated[AsyncSession, Depends(get_db)],
-    token: str,
     status: bool,
-    objekt: str
+    objekt: str,
+    Authorization: str=Header(...)
 ):
     try:
-        update_status= await TelekomEditorOperations(db_session).update_status_img(token, status, objekt)
+        update_status= await TelekomEditorOperations(db_session).update_status_img(Authorization, status, objekt)
         if not update_status:
             raise HTTPException(status_code=404, detail="Image not found.")
         return{"result": update_status} 
@@ -103,11 +102,11 @@ async def update_status_img(
 @telekomeditor_router.get("/projectname/{projectname}")
 async def get_projects_info(
     db_session: Annotated[AsyncSession, Depends(get_db)],
-    editor_token: str,
-    projectname: str
+    projectname: str,
+    Authorization: str=Header(...)
 )-> dict:
     try:
-        projects = await TelekomEditorOperations(db_session).get_projects_info(editor_token, projectname)
+        projects = await TelekomEditorOperations(db_session).get_projects_info(Authorization, projectname)
         if isinstance(projects, str):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=projects)
         

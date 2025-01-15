@@ -50,8 +50,7 @@ class AnalyseImg(BaseModel):
 
 
 
-class UploadImgRequest(BaseModel):
-    token: str
+class CoordinateOfImg(BaseModel):
     lat: float
     long: float
 
@@ -60,7 +59,6 @@ class UploadImgRequest(BaseModel):
 
 
 class UpdateImgRequest(BaseModel):
-    token: str
     lat: float
     long: float
     oldOriginalImgUrl: str

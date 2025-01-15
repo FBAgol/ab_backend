@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, status, Body, File, UploadFile, Form
+from fastapi import APIRouter, HTTPException, Depends, status, Body, File, UploadFile, Form, Header
 from starlette.responses import JSONResponse
 from typing import Annotated
 from datetime import timedelta
@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from operations.company_editor import CompanyEditorOperations
 from db.engine import get_db
-from schemas._input import Editor_regist , Login, UploadImgRequest, UpdateImgRequest
+from schemas._input import Editor_regist , Login, CoordinateOfImg, UpdateImgRequest
 from jwt_utils import create_access_token, create_refresh_token
 
 
@@ -85,11 +85,12 @@ async def login_company_editor(
 @companyeditor_router.get("/projectname/{projectname}")
 async def get_projects_info(
     db_session: Annotated[AsyncSession, Depends(get_db)],
-    editor_token: str,
-    projectname: str
+    
+    projectname: str,
+    Authorization: str= Header(...)
 )-> dict:
     try:
-        projects = await CompanyEditorOperations(db_session).get_projects_info(editor_token, projectname)
+        projects = await CompanyEditorOperations(db_session).get_projects_info(Authorization, projectname)
         if isinstance(projects, str):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=projects)
         
@@ -111,13 +112,14 @@ async def get_projects_info(
 @companyeditor_router.post("/upload/img")
 async def upload_img(
     db_session: Annotated[AsyncSession, Depends(get_db)],
+    Authorization: str= Header(...),
     upload_img_request: str= Form(...),
     file: UploadFile = File(...)
 ):
     try:
-        upload_request = UploadImgRequest.model_validate_json(upload_img_request).model_dump()
+        upload_request = CoordinateOfImg.model_validate_json(upload_img_request).model_dump()
         # Analysiere das Bild und erhalte die Ergebnisse
-        result = await CompanyEditorOperations(db_session).analyse_img(upload_request["token"], upload_request["lat"], upload_request["long"], file)
+        result = await CompanyEditorOperations(db_session).analyse_img(Authorization, upload_request["lat"], upload_request["long"], file)
 
         # Rückgabe der Analyseergebnisse als JSON
         return JSONResponse(content=result)
@@ -142,12 +144,13 @@ async def upload_img(
 @companyeditor_router.put("/update/img_coordinate")
 async def update_img_coordinate(
     db_session: Annotated[AsyncSession, Depends(get_db)],
+    Authorization: str= Header(...),
     update_img_request: str= Form(...),
     file: UploadFile = File(...)
 ):
     try:
         update_request = UpdateImgRequest.model_validate_json(update_img_request).model_dump()
-        result = await CompanyEditorOperations(db_session).update_coord_img(update_request["token"], update_request["lat"], update_request["long"], update_request["oldOriginalImgUrl"], update_request["oldAnalyzedImgUrl"], file)
+        result = await CompanyEditorOperations(db_session).update_coord_img(Authorization, update_request["lat"], update_request["long"], update_request["oldOriginalImgUrl"], update_request["oldAnalyzedImgUrl"], file)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
