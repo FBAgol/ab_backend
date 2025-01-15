@@ -22,7 +22,7 @@ async def register_telekom_Editor(
         editor = await TelekomEditorOperations(db_session).registration(telekom_editor.secret_key, telekom_editor.email, telekom_editor.password,telekom_editor.role)
         
         if isinstance(editor, str): 
-            return editor
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=editor)
         
         access_token = create_access_token(data={"sub": str(editor["id"])}, expires_delta=timedelta(days=1)) 
         refresh_token = create_refresh_token(data={"sub": str(editor["id"])}, expires_delta=timedelta(days=7))
@@ -53,7 +53,7 @@ async def register_telekom_Editor(
 async def login_telekom_editor(
     db_session: Annotated[AsyncSession, Depends(get_db)],
     editor_login: Login
-)-> dict:
+)-> dict | str:
     try:
         editor = await TelekomEditorOperations(db_session).login(editor_login.email, editor_login.password, editor_login.role)
         print("editor info ",editor)

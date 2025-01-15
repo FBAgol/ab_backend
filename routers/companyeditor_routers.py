@@ -22,7 +22,7 @@ async def register_company_Editor(
         editor = await CompanyEditorOperations(db_session).registration(company_editor.secret_key, company_editor.email, company_editor.password, company_editor.role)
         
         if isinstance(editor, str): 
-            return editor        
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=editor)
         access_token = create_access_token(data={"sub": str(editor["id"])}, expires_delta=timedelta(days=1)) 
         refresh_token = create_refresh_token(data={"sub": str(editor["id"])}, expires_delta=timedelta(days=7))
         

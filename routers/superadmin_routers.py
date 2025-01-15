@@ -25,7 +25,7 @@ async def register_superadadmin(
         editor = await SuperAdminOperations(db_session).registration( company_editor.email, company_editor.password, company_editor.role)
         
         if isinstance(editor, str): 
-            return editor
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=editor)
         
         access_token = create_access_token(data={"sub": str(editor["editor_id"]["id"])}, expires_delta=timedelta(days=1)) 
         refresh_token = create_refresh_token(data={"sub": str(editor["editor_id"]["id"])}, expires_delta=timedelta(days=7))
@@ -57,7 +57,7 @@ async def login_superadmin(
         print("editor info ",editor)
         
         if isinstance(editor, str):
-            return editor
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=editor)
         
         access_token = create_access_token(data={"sub": str(editor["editor_id"]["id"])}, expires_delta=timedelta(days=1)) 
         refresh_token = create_refresh_token(data={"sub": str(editor["editor_id"]["id"])}, expires_delta=timedelta(days=7))
