@@ -85,10 +85,10 @@ async def login_company_editor(
 @companyeditor_router.get("/projectname/{projectname}")
 async def get_projects_info(
     db_session: Annotated[AsyncSession, Depends(get_db)],
-    
     projectname: str,
     Authorization: str= Header(...)
 )-> dict:
+    print(f"Authorization header: {Authorization}") 
     try:
         projects = await CompanyEditorOperations(db_session).get_projects_info(Authorization, projectname)
         if isinstance(projects, str):
