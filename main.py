@@ -2,6 +2,7 @@ from fastapi import FastAPI, APIRouter
 from fastapi.staticfiles import StaticFiles
 import logging
 import os
+from fastapi.openapi.utils import get_openapi
 
 from db.engine import Base, engine
 from cors_config import add_cors_middleware
@@ -41,3 +42,31 @@ async def init_tables():
 # Binden des zentralen Routers an die Hauptanwendung
 app.include_router(main_router, prefix="/api/v1")
 
+# Deine bestehenden Router-Registrierungen und Logik
+# z. B. app.include_router(companyeditor_router)
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="My API",
+        version="1.0.0",
+        description="This is a custom OpenAPI schema",
+        routes=app.routes,
+    )
+    # Bearer Token Security
+    openapi_schema["components"]["securitySchemes"] = {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+        }
+    }
+    # Sicherheit auf alle Endpunkte anwenden
+    for path in openapi_schema["paths"]:
+        for method in openapi_schema["paths"][path]:
+            if method.lower() in ["get", "post", "put", "delete"]:
+                openapi_schema["paths"][path][method]["security"] = [{"BearerAuth": []}]
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi

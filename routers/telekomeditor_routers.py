@@ -13,7 +13,7 @@ from jwt_utils import create_access_token, create_refresh_token
 telekomeditor_router = APIRouter()
 
 
-@telekomeditor_router.post("/registeration")
+@telekomeditor_router.post("/registration")
 async def register_telekom_Editor(
     db_session: Annotated[AsyncSession, Depends(get_db)],
     telekom_editor: Editor_regist= Body(...),
@@ -42,7 +42,7 @@ async def register_telekom_Editor(
 {
     "secret_key":"string123",
     "email":"golzari@telekom.de",
-    "password":"telekom",
+    "password":"Telekom(123)",
     "role":2
 }
 """
@@ -93,7 +93,7 @@ async def update_status_img(
 
     {
         "email":"golzari@telekom.de",
-        "password":"telekom",
+        "password":"Telekom(123)",
         "role":2
     }
 """
@@ -105,8 +105,21 @@ async def get_projects_info(
     projectname: str,
     Authorization: str=Header(...)
 )-> dict:
+    # Entferne den "Bearer " Präfix (falls vorhanden)
+    if Authorization.startswith("Bearer "):
+        token = Authorization.replace("Bearer ", "")
+    else:
+        token = Authorization  # Falls kein Präfix vorhanden ist, verwende den gesamten Header
+
+    print(f"Extracted token: {token}")  # Debugging
+
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Authorization header is missing or invalid.",
+        )
     try:
-        projects = await TelekomEditorOperations(db_session).get_projects_info(Authorization, projectname)
+        projects = await TelekomEditorOperations(db_session).get_projects_info(token, projectname)
         if isinstance(projects, str):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=projects)
         

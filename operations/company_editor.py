@@ -351,6 +351,25 @@ class CompanyEditorOperations:
                 if os.path.exists(tmp_file_path):
                     os.remove(tmp_file_path)
             
+
+    async def get_img(self, token: str, img_url: str) -> bytes | None:
+        editor_id = UUID(get_user_id_from_token(token))
+        query_editor = sa.select(Company_Editor).where(Company_Editor.id == editor_id)
+        query_coord = sa.select(Coordinate).where(Coordinate.original_image_url == img_url)
+
+        async with self.db_session as session:
+            editor = await session.scalar(query_editor)
+            coord = await session.scalar(query_coord)
+
+            if not editor or not coord:
+                raise HTTPException(status_code=404, detail="Editor or coordinate not found.")
+
+            image_path = os.path.join(ORIGINAL_DIR, os.path.basename(img_url))
+
+            if os.path.exists(image_path):
+                with open(image_path, "rb") as image_file:
+                    return image_file.read()
+            return None
          
 
                 

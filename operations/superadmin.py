@@ -17,10 +17,14 @@ class SuperAdminOperations:
     async def registration( self,email: str, password: str, role:int) -> dict| str:
         query = sa.select(Super_Admin).options(selectinload(Super_Admin.companys), selectinload(Super_Admin.telekom_editors)).where(Super_Admin.email == email)
          
+        print("operaiton Email", email)
+        print("operation password", password)
+        print("operation role", role)
         try:
             async with self.db_session as session:
                 editor = await session.scalar(query)
                 if editor:
+                    print("editor is here")
                     return "Email already exists."
                 else:
                     editor = Super_Admin(email=email, password=self.hash.bcrypt(password), role=role)
@@ -28,6 +32,8 @@ class SuperAdminOperations:
                     await session.commit()
                     #await session.refresh(editor)
                     editor = await session.scalar(query)
+                    print("editor added")
+
                     return {"editor_id":to_dict(editor)}
                
 

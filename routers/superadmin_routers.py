@@ -16,16 +16,19 @@ from jwt_utils import create_access_token, create_refresh_token, get_user_id_fro
 
 superadmin_router = APIRouter()
 
-@superadmin_router.post("/registeration")
+@superadmin_router.post("/registration")
 async def register_superadadmin(
     db_session: Annotated[AsyncSession, Depends(get_db)],
     company_editor: Login,
 )-> dict | str:
     try:
+        ##print("company_editor", company_editor)
         editor = await SuperAdminOperations(db_session).registration( company_editor.email, company_editor.password, company_editor.role)
         
         if isinstance(editor, str): 
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=editor)
+            return editor
+        
+        print("editor info ",editor["editor_id"]["id"])
         
         access_token = create_access_token(data={"sub": str(editor["editor_id"]["id"])}, expires_delta=timedelta(days=1)) 
         refresh_token = create_refresh_token(data={"sub": str(editor["editor_id"]["id"])}, expires_delta=timedelta(days=7))
@@ -42,7 +45,7 @@ async def register_superadadmin(
 """
 {
 "email": "farzad@gmail.com",
-"password": "farzad",
+"password": "Farzad(18)",
 "role": 0
 }
 """
@@ -130,12 +133,11 @@ async def create_editors_projects(
 
 
     """
-    {
-  "superadmin_id": "123123166aee42c88b6a4dcbc99bafe1", 
+    { 
   "company_name": "baumax",
   "TelEditor_email": "golzari@telekom.de",
   "TelEditor_secret_key": "string123",
-  "Com_Editor_email": "max@baumax.de",
+  "Com_Editor_email": "max@gmail.de",
   "Com_Editor_secret_key": "string456",
   "project_name": "telMax"
 }

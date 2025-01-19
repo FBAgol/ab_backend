@@ -3,6 +3,7 @@ from starlette.responses import JSONResponse
 from typing import Annotated
 from datetime import timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from operations.company_editor import CompanyEditorOperations
 from db.engine import get_db
@@ -11,9 +12,10 @@ from jwt_utils import create_access_token, create_refresh_token
 
 
 
+
 companyeditor_router = APIRouter()
 
-@companyeditor_router.post("/registeration")
+@companyeditor_router.post("/registration")
 async def register_company_Editor(
     db_session: Annotated[AsyncSession, Depends(get_db)],
     company_editor: Editor_regist= Body(...),
@@ -22,7 +24,7 @@ async def register_company_Editor(
         editor = await CompanyEditorOperations(db_session).registration(company_editor.secret_key, company_editor.email, company_editor.password, company_editor.role)
         
         if isinstance(editor, str): 
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=editor)
+            return editor
         access_token = create_access_token(data={"sub": str(editor["id"])}, expires_delta=timedelta(days=1)) 
         refresh_token = create_refresh_token(data={"sub": str(editor["id"])}, expires_delta=timedelta(days=7))
         
@@ -40,8 +42,8 @@ async def register_company_Editor(
 
 {
     "secret_key":"string456",
-    "email":"max@baumax.de",
-    "password":"maxbauman",
+    "email":"max@gmail.de",
+    "password":"Max(12345)",
     "role":1
 }
 """
@@ -76,8 +78,8 @@ async def login_company_editor(
 """
 
 {
-    "email":"max@baumax.de",
-    "password":"maxbauman",
+    "email":"max@gmail.de",
+    "password":"Max(12345)",
     "role":1
 }
 """
@@ -86,11 +88,25 @@ async def login_company_editor(
 async def get_projects_info(
     db_session: Annotated[AsyncSession, Depends(get_db)],
     projectname: str,
-    Authorization: str= Header(...)
-)-> dict:
-    print(f"Authorization header: {Authorization}") 
+    Authorization: str = Header(...)
+) -> dict:
+    print(f"Authorization header received: {Authorization}")  # Debugging
+
+    # Entferne den "Bearer " Präfix (falls vorhanden)
+    if Authorization.startswith("Bearer "):
+        token = Authorization.replace("Bearer ", "")
+    else:
+        token = Authorization  # Falls kein Präfix vorhanden ist, verwende den gesamten Header
+
+    print(f"Extracted token: {token}")  # Debugging
+
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Authorization header is missing or invalid.",
+        )
     try:
-        projects = await CompanyEditorOperations(db_session).get_projects_info(Authorization, projectname)
+        projects = await CompanyEditorOperations(db_session).get_projects_info(token, projectname)
         if isinstance(projects, str):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=projects)
         
@@ -116,10 +132,19 @@ async def upload_img(
     upload_img_request: str= Form(...),
     file: UploadFile = File(...)
 ):
+    print(f"Authorization header received: {Authorization}")  # Debugging
+
+    # Entferne den "Bearer " Präfix (falls vorhanden)
+    if Authorization.startswith("Bearer "):
+        token = Authorization.replace("Bearer ", "")
+    else:
+        token = Authorization  # Falls kein Präfix vorhanden ist, verwende den gesamten Header
+
+    print(f"Extracted token: {token}")  # Debugging
     try:
         upload_request = CoordinateOfImg.model_validate_json(upload_img_request).model_dump()
         # Analysiere das Bild und erhalte die Ergebnisse
-        result = await CompanyEditorOperations(db_session).analyse_img(Authorization, upload_request["lat"], upload_request["long"], file)
+        result = await CompanyEditorOperations(db_session).analyse_img(token, upload_request["lat"], upload_request["long"], file)
 
         # Rückgabe der Analyseergebnisse als JSON
         return JSONResponse(content=result)
@@ -164,3 +189,19 @@ async def update_img_coordinate(
     "oldAnalyzedImgUrl":"/static/images/analyse/c95be6d1-f721-4a12-bed6-09babe73aa51.jpg"
     }
 """
+
+
+@companyeditor_router.get("/getimg")
+async def get_img(
+    db_session: Annotated[AsyncSession, Depends(get_db)],
+    img_url: str,
+    Authorization: str= Header(...)
+    
+):
+    try:
+        img = await CompanyEditorOperations(db_session).get_img(Authorization, img_url)
+        if not img:
+            raise HTTPException(status_code=404, detail="Image not found")
+        return img
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")

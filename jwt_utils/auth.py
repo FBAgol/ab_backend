@@ -35,13 +35,18 @@ def verify_token(token: str) -> dict:
         if not isinstance(token, str):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Token must be a string")
 
+        print(f"Verifying token: {token}")  # Debugging
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])  # Token dekodieren und verifizieren
-        print("Payload is: ", payload)
+        print("Payload is: ", payload)  # Debugging
         return payload
     except ExpiredSignatureError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired")
-    except DecodeError:
+    except DecodeError as e:
+        print(f"DecodeError: {str(e)}")  # Debugging
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token is invalid")
+    except Exception as e:
+        print(f"Unexpected error: {str(e)}")  # Debugging
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token verification failed")
 
 
 # Extrahiere die Benutzer-ID aus dem Token

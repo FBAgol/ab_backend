@@ -21,7 +21,7 @@ COPY . /app
 
 
 # Installiere alle Abhängigkeiten mit Poetry
-RUN poetry install 
+RUN poetry install
  
 
 ENV PATH="/app/.venv/bin:$PATH"
