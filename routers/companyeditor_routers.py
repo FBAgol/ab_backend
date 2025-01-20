@@ -198,8 +198,17 @@ async def get_img(
     Authorization: str= Header(...)
     
 ):
+    print(f"Authorization header received: {Authorization}")  # Debugging
+
+    # Entferne den "Bearer " Präfix (falls vorhanden)
+    if Authorization.startswith("Bearer "):
+        token = Authorization.replace("Bearer ", "")
+    else:
+        token = Authorization  # Falls kein Präfix vorhanden ist, verwende den gesamten Header
+
+    print(f"Extracted token: {token}")  # Debugging
     try:
-        img = await CompanyEditorOperations(db_session).get_img(Authorization, img_url)
+        img = await CompanyEditorOperations(db_session).get_img(token, img_url)
         if not img:
             raise HTTPException(status_code=404, detail="Image not found")
         return img
