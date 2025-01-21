@@ -170,12 +170,10 @@ async def upload_img(
 async def update_img_coordinate(
     db_session: Annotated[AsyncSession, Depends(get_db)],
     Authorization: str= Header(...),
-    update_img_request: str= Form(...),
-    file: UploadFile = File(...)
+    update_img_request: UpdateImgRequest= Body(...)
 ):
     try:
-        update_request = UpdateImgRequest.model_validate_json(update_img_request).model_dump()
-        result = await CompanyEditorOperations(db_session).update_coord_img(Authorization, update_request["lat"], update_request["long"], update_request["oldOriginalImgUrl"], update_request["oldAnalyzedImgUrl"], file)
+        result = await CompanyEditorOperations(db_session).update_coord_img(Authorization, update_img_request.oldOriginalImgUrl, update_img_request.oldAnalyzedImgUrl)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")

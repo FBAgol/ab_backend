@@ -228,10 +228,11 @@ class CompanyEditorOperations:
 
 
         
-    async def update_coord_img(self, token: str, lat: float, long: float, oldOriginalImgUrl: str, oldAnalyseImgUrl: str, newFile: UploadFile) -> None:
+    async def update_coord_img(self, token: str, oldOriginalImgUrl: str, oldAnalyseImgUrl: str) -> dict:
         editor_id = UUID(get_user_id_from_token(token))
         query_editor = sa.select(Company_Editor).where(Company_Editor.id == editor_id)
-        query_coord = sa.select(Coordinate).where(Coordinate.latitude == lat, Coordinate.longitude == long)
+        query_coord = sa.select(Coordinate).where(Coordinate.original_image_url == oldOriginalImgUrl, Coordinate.analysed_image_url == oldAnalyseImgUrl)
+        update_coord_query = sa.update(Coordinate).where(Coordinate.original_image_url == oldOriginalImgUrl, Coordinate.analysed_image_url == oldAnalyseImgUrl).values(original_image_url='', analysed_image_url='', result_materiallist=[])
         
         
         async with self.db_session as session:
@@ -241,14 +242,9 @@ class CompanyEditorOperations:
             if not editor or not coord:
                 raise HTTPException(status_code=404, detail="Editor or coordinate not found.")
 
-            # Temporäre Datei für das neue Originalbild erstellen
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp_file:
-                tmp_file.write(await newFile.read())
-                tmp_file_path = tmp_file.name
-
             try:
-                # Analyse des neuen Bildes durchführen
-                analysed_image, detected_objects = analyse_imgs(tmp_file_path)
+                await session.execute(update_coord_query)
+                await session.commit() 
 
                 # Alte Bilder löschen, wenn sie existieren
                 if oldOriginalImgUrl:
@@ -261,25 +257,12 @@ class CompanyEditorOperations:
                     if os.path.exists(old_analysed_path):
                         os.remove(old_analysed_path)
 
-                # Neues Originalbild speichern
-                original_filename = f"{uuid4()}.jpg"
-                original_filepath = os.path.join(ORIGINAL_DIR, original_filename)
-                shutil.move(tmp_file_path, original_filepath)
-
-                # Neues analysiertes Bild speichern
-                analysed_filename = f"{uuid4()}.jpg"
-                analysed_filepath = os.path.join(ANALYSE_DIR, analysed_filename)
-                with open(analysed_filepath, "wb") as analysed_file:
-                    analysed_file.write(analysed_image.getvalue())
-
-                # Neue Bild-URLs generieren
-                original_image_url = f"/static/images/original/{original_filename}"
-                analysed_image_url = f"/static/images/analyse/{analysed_filename}"
 
                  # Lösche alte Benachrichtigungen
                 query_notification = sa.select(Notification).where(Notification.coordinate_id == coord.id)
 
                 notification = await session.scalar(query_notification)
+                
             
 
 
@@ -287,69 +270,13 @@ class CompanyEditorOperations:
                     delete_coord_notification_query = sa.delete(Notification).where(Notification.coordinate_id == coord.id)
                     #await session.scalar(delete_coord_notification_query)
                     await session.execute(delete_coord_notification_query)
-                
 
-                # Datenbank aktualisieren
-                coord.original_image_url = original_image_url
-                coord.analysed_image_url = analysed_image_url
-                coord.result_materiallist = detected_objects
-
-                project_query = sa.select(Project).where(Project.company_editor_id == editor.id)
-                project = await session.scalar(project_query)
-
-                if not project:
-                    raise HTTPException(status_code=404, detail="Project not found.")
-
-                # Überprüfen, ob Benachrichtigungen nötig sind
-                notification_message = None
-                for obj in detected_objects:
-                    if obj["status"] == False:
-                        telekom_editor_query = sa.select(Telekom_Editor).where(Telekom_Editor.id == project.telekom_editor_id)
-                        telekom_editor = await session.scalar(telekom_editor_query)
-
-                        if not telekom_editor:
-                            raise HTTPException(status_code=404, detail="Telekom Editor not found.")
-
-                        city_query = sa.select(City).where(City.id == project.city_id)
-                        city = await session.scalar(city_query)
-
-                        street_query = sa.select(Street).where(Street.id == coord.street_id)
-                        street = await session.scalar(street_query)
-
-                        # Benachrichtigung erstellen (JSON)
-                        notification_message = {
-                            "project_name": project.project_name,
-                            "city": city.city_name if city else "N/A",
-                            "street": street.street_name if street else "N/A",
-                            "company_editor": editor.editor_email,
-                            "latitude": float(coord.latitude),
-                            "longitude": float(coord.longitude),
-                            "analysed_image_url": analysed_image_url,
-                            "objects": obj,
-                        }
-
-                        notification = Notification(
-                            message=notification_message,
-                            coordinate_id=coord.id,
-                            telekom_editor_id=telekom_editor.id
-                        )
-                        session.add(notification)
 
                     await session.commit()
-                return {
-                "detected_objects": detected_objects,
-                "original_image_url": original_image_url,
-                "analysed_image_url": analysed_image_url,
-                "notification": notification_message
-            }
+                return {"message": "Coordinate images updated successfully."}
 
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Error during image analysis: {str(e)}")
-
-            finally:
-                # Sicherstellen, dass temporäre Datei gelöscht wird, falls sie noch existiert
-                if os.path.exists(tmp_file_path):
-                    os.remove(tmp_file_path)
             
 
     async def get_img(self, token: str, img_url: str) -> bytes | None:

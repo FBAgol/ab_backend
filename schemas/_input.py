@@ -59,8 +59,6 @@ class CoordinateOfImg(BaseModel):
 
 
 class UpdateImgRequest(BaseModel):
-    lat: float
-    long: float
     oldOriginalImgUrl: str
     oldAnalyzedImgUrl: str
 
