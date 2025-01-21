@@ -159,8 +159,8 @@ class CompanyEditorOperations:
                     analysed_file.write(analysed_image.getvalue())
 
                 # Bild-URLs generieren
-                original_image_url = f"/static/images/original/{original_filename}"
-                analysed_image_url = f"/static/images/analyse/{analysed_filename}"
+                original_image_url = f"images/original/{original_filename}"
+                analysed_image_url = f"images/analyse/{analysed_filename}"
 
                 # Datenbank aktualisieren
                 coord_obj.original_image_url = original_image_url

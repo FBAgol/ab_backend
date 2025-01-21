@@ -145,3 +145,13 @@ async def create_editors_projects(
     """
 
 
+"""
+    { 
+  "company_name": "baumax",
+  "TelEditor_email": "golzari@telekom.de",
+  "TelEditor_secret_key": "string123",
+  "Com_Editor_email": "max@gmail.de",
+  "Com_Editor_secret_key": "string456",
+  "project_name": "bauTel"
+}
+"""
