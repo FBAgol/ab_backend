@@ -8,7 +8,7 @@ from uuid import UUID
 
 from operations.superadmin import SuperAdminOperations
 from db.engine import get_db
-from schemas._input import ManagementInfo, Login, Editor_regist
+from schemas._input import ManagementInfo, Login
 from exel_conver import convert_excel_to_list as exel_convert
 from jwt_utils import create_access_token, create_refresh_token, get_user_id_from_token
 

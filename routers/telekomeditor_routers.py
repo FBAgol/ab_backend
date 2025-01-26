@@ -56,7 +56,7 @@ async def login_telekom_editor(
 )-> dict | str:
     try:
         editor = await TelekomEditorOperations(db_session).login(editor_login.email, editor_login.password, editor_login.role)
-        print("editor info ",editor)
+       # print("editor info ",editor)
         
         if isinstance(editor, str):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=editor)
@@ -111,7 +111,7 @@ async def get_projects_info(
     else:
         token = Authorization  # Falls kein Präfix vorhanden ist, verwende den gesamten Header
 
-    print(f"Extracted token: {token}")  # Debugging
+    #print(f"Extracted token: {token}")  # Debugging
 
     if not token:
         raise HTTPException(

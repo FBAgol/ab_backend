@@ -3,7 +3,6 @@ from starlette.responses import JSONResponse
 from typing import Annotated
 from datetime import timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from operations.company_editor import CompanyEditorOperations
 from db.engine import get_db
@@ -90,7 +89,7 @@ async def get_projects_info(
     projectname: str,
     Authorization: str = Header(...)
 ) -> dict:
-    print(f"Authorization header received: {Authorization}")  # Debugging
+   # print(f"Authorization header received: {Authorization}")  # Debugging
 
     # Entferne den "Bearer " Präfix (falls vorhanden)
     if Authorization.startswith("Bearer "):
@@ -98,7 +97,7 @@ async def get_projects_info(
     else:
         token = Authorization  # Falls kein Präfix vorhanden ist, verwende den gesamten Header
 
-    print(f"Extracted token: {token}")  # Debugging
+  #  print(f"Extracted token: {token}")  # Debugging
 
     if not token:
         raise HTTPException(
@@ -132,7 +131,7 @@ async def upload_img(
     upload_img_request: str= Form(...),
     file: UploadFile = File(...)
 ):
-    print(f"Authorization header received: {Authorization}")  # Debugging
+   # print(f"Authorization header received: {Authorization}")  # Debugging
 
     # Entferne den "Bearer " Präfix (falls vorhanden)
     if Authorization.startswith("Bearer "):
@@ -140,7 +139,7 @@ async def upload_img(
     else:
         token = Authorization  # Falls kein Präfix vorhanden ist, verwende den gesamten Header
 
-    print(f"Extracted token: {token}")  # Debugging
+   # print(f"Extracted token: {token}")  # Debugging
     try:
         upload_request = CoordinateOfImg.model_validate_json(upload_img_request).model_dump()
         # Analysiere das Bild und erhalte die Ergebnisse
@@ -196,7 +195,7 @@ async def get_img(
     Authorization: str= Header(...)
     
 ):
-    print(f"Authorization header received: {Authorization}")  # Debugging
+  #  print(f"Authorization header received: {Authorization}")  # Debugging
 
     # Entferne den "Bearer " Präfix (falls vorhanden)
     if Authorization.startswith("Bearer "):
@@ -204,7 +203,7 @@ async def get_img(
     else:
         token = Authorization  # Falls kein Präfix vorhanden ist, verwende den gesamten Header
 
-    print(f"Extracted token: {token}")  # Debugging
+   # print(f"Extracted token: {token}")  # Debugging
     try:
         img = await CompanyEditorOperations(db_session).get_img(token, img_url)
         if not img:

@@ -3,7 +3,7 @@ import sqlalchemy as sa
 from sqlalchemy.orm import  selectinload
 from uuid import UUID
 
-from db.models import Super_Admin, Company_Editor, Telekom_Editor, Company, Project, City, Street, City_Street, Coordinate, Notification
+from db.models import Super_Admin, Company_Editor, Telekom_Editor, Company, Project, City, Street, City_Street, Coordinate
 from db import Hash
 from convert_to_dict import to_dict
 

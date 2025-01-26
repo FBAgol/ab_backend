@@ -111,11 +111,11 @@ class TelekomEditorOperations:
         
         return "Status updated successfully."
     
-
+    
 
     async def get_projects_info(self, editor_token: str, projectname: str) -> dict | str:
         editor_id = UUID(get_user_id_from_token(editor_token))
-        print("editor_id is:   ",editor_id)
+       # print("editor_id is:   ",editor_id)
         try:
             query = (
                 sa.select(Telekom_Editor)

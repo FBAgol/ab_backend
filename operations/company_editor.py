@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 import sqlalchemy as sa
-from fastapi import UploadFile, File, HTTPException
+from fastapi import UploadFile, HTTPException
 from uuid import UUID, uuid4
 import tempfile
 import os
@@ -12,6 +12,7 @@ from db import Hash
 from convert_to_dict import to_dict
 from jwt_utils import get_user_id_from_token
 from NT_O_Detection_v3_800.anaylse_img import analyse_imgs
+
 
 
 
@@ -74,7 +75,7 @@ class CompanyEditorOperations:
 
     async def get_projects_info(self, editor_token: str, projectname: str) -> dict | str:
         editor_id = UUID(get_user_id_from_token(editor_token))
-        print("editor_id is:   ",editor_id)
+       # print("editor_id is:   ",editor_id)
         try:
             query = (
                 sa.select(Company_Editor)
@@ -200,6 +201,13 @@ class CompanyEditorOperations:
                             "analysed_image_url": analysed_image_url,
                             "objects": obj,
                         }
+                        from main import sio
+
+                        if notification_message:
+                            room_id = str(telekom_editor.id)
+                            await sio.emit('notification', notification_message, room=room_id)
+
+                        #  print(f"Notification sent to room: {telekom_editor.id}")  # Debugging
 
                         notification = Notification(
                             message=notification_message,
@@ -260,18 +268,12 @@ class CompanyEditorOperations:
 
                  # Lösche alte Benachrichtigungen
                 query_notification = sa.select(Notification).where(Notification.coordinate_id == coord.id)
-
                 notification = await session.scalar(query_notification)
                 
-            
-
-
                 if notification:
                     delete_coord_notification_query = sa.delete(Notification).where(Notification.coordinate_id == coord.id)
                     #await session.scalar(delete_coord_notification_query)
                     await session.execute(delete_coord_notification_query)
-
-
                     await session.commit()
                 return {"message": "Coordinate images updated successfully."}
 
