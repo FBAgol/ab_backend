@@ -68,7 +68,9 @@ async def login_telekom_editor(
             "access_token": access_token,
             "refresh_token": refresh_token,
             "token_type": "bearer",
-            "notifications": editor["notifications"]
+            "notifications": editor["notifications"],
+            "projects": editor["projects"],
+            "company_name":"Telekom"
         }
 
     except Exception as e:

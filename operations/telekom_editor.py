@@ -52,7 +52,9 @@ class TelekomEditorOperations:
                         notification_query= sa.select(Notification).options(selectinload(Notification.telekom_editor), selectinload(Notification.coordinate)).where(Notification.telekom_editor_id==editor.id)
                         notifications= await session.scalars(notification_query)
                         list_notifications= [notification.message for notification in notifications]
+                        list_projects= [project.project_name for project in editor.projects]
                         return {
+                            "projects": list_projects,
                             "notifications": list_notifications,
                             "editor_id":to_dict(editor),
                         }
@@ -145,7 +147,6 @@ class TelekomEditorOperations:
                             ]
                             
                             project_info = {
-                                "project_name": project.project_name,
                                 "city": city.city_name if city else None,
                                 "streets": streets,
                             }
