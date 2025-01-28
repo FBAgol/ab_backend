@@ -61,51 +61,40 @@ class TelekomEditorOperations:
         except Exception as e:
             raise Exception(f"Error logging in: {str(e)}")
 
-    async def update_status_img(self, token: str, status: bool, objekt: str):
+    async def update_status_img(self, token: str, status: bool, lat:float, lon:float, object:str)-> str:
         editor_id = UUID(get_user_id_from_token(token))
         if not editor_id:
             raise HTTPException(status_code=401, detail="Telekom Editor not found.")
         
         editor_query = sa.select(Telekom_Editor).where(Telekom_Editor.id == editor_id)
+        coord_query= sa.select(Coordinate).where(Coordinate.latitude==lat, Coordinate.longitude==lon)
         async with self.db_session as session:
             editor = await session.scalar(editor_query)
             if not editor:
                 raise HTTPException(status_code=404, detail="Editor not found.")
             
-            notification_query = sa.select(Notification).options(
-                selectinload(Notification.coordinate), 
-                selectinload(Notification.telekom_editor)
-            ).where(Notification.telekom_editor_id == editor.id)
+            coord = await session.scalar(coord_query)
             
             delet_notification_query = sa.delete(Notification).where(
-                Notification.telekom_editor_id == editor.id
+                Notification.coordinate_id == coord.id,
             )
             
-            if status:
-                notifications = await session.scalars(notification_query)
-                notifications = notifications.all()
-                for notification in notifications:
-                    coord_query = sa.select(Coordinate).where(Coordinate.id == notification.coordinate_id)
-                    coord = await session.scalar(coord_query)
-                    
-                    if not coord:
-                        raise HTTPException(status_code=404, detail="Coordinate not found.")
-                    
-                    materiallist = coord.result_materiallist 
-                    updated = False
-                    
-                    for material in materiallist:
-                        if material["object"] == objekt:  
-                            material["status"] = status   
-                            coord.result_materiallist = materiallist[:] 
-                            flag_modified(coord, "result_materiallist")  # SQLAlchemy Änderungen mitteilen
-                            session.add(coord)  # Objekt zur Session hinzufügen
-                            updated = True
-                            break
-                    
-                    if updated:
-                        await session.execute(delet_notification_query) 
+            if status:                    
+                if not coord:
+                    raise HTTPException(status_code=404, detail="Coordinate not found.")
+                
+                materiallist = coord.result_materiallist 
+                
+                for material in materiallist:
+                    if material["object"] == object:  
+                        material["status"] = status   
+                        coord.result_materiallist = materiallist[:] 
+                        flag_modified(coord, "result_materiallist")  # SQLAlchemy Änderungen mitteilen
+                        session.add(coord)  # Objekt zur Session hinzufügen
+     
                         break
+                
+                await session.execute(delet_notification_query)
                 
                 await session.commit()
         

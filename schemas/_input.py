@@ -64,3 +64,11 @@ class UpdateImgRequest(BaseModel):
 
     class Config:
         orm_mode = True
+
+class UpdateObjectStatusRequest(BaseModel):
+    status: bool
+    lat: float
+    long: float
+    objectName: str
+    class Config:
+        orm_mode = True

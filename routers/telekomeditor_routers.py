@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from operations.telekom_editor import TelekomEditorOperations
 from db.engine import get_db
-from schemas._input import Editor_regist , Login
+from schemas._input import Editor_regist , Login, UpdateObjectStatusRequest
 from jwt_utils import create_access_token, create_refresh_token
 
 
@@ -77,12 +77,12 @@ async def login_telekom_editor(
 @telekomeditor_router.put("/update_status_img")
 async def update_status_img(
     db_session: Annotated[AsyncSession, Depends(get_db)],
-    status: bool,
-    objekt: str,
-    Authorization: str=Header(...)
+    Authorization: str=Header(...),
+    statusObj: UpdateObjectStatusRequest= Body(...),
+
 ):
     try:
-        update_status= await TelekomEditorOperations(db_session).update_status_img(Authorization, status, objekt)
+        update_status= await TelekomEditorOperations(db_session).update_status_img(Authorization, statusObj.status, statusObj.lat, statusObj.long, statusObj.objectName)
         if not update_status:
             raise HTTPException(status_code=404, detail="Image not found.")
         return{"result": update_status} 

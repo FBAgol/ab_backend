@@ -189,6 +189,8 @@ class CompanyEditorOperations:
 
                         street_query = sa.select(Street).where(Street.id == coord_obj.street_id)
                         street = await session.scalar(street_query)
+                        coord_query= sa.select(Coordinate).where(Coordinate.latitude == lat, Coordinate.longitude == long)
+                        coord= await session.scalar(coord_query)
 
                         # Benachrichtigung erstellen (JSON)
                         notification_message = {
@@ -196,9 +198,10 @@ class CompanyEditorOperations:
                             "city": city.city_name if city else "N/A",
                             "street": street.street_name if street else "N/A",
                             "company_editor": editor.editor_email,
-                            "latitude": float(coord_obj.latitude),
-                            "longitude": float(coord_obj.longitude),
+                            "zone_id": coord_obj.zone_id,
                             "analysed_image_url": analysed_image_url,
+                            "latitude": lat,
+                            "longitude": long,
                             "objects": obj,
                         }
                         from main import sio

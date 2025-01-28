@@ -98,8 +98,12 @@ async def create_editors_projects(
 
         exel_converter= await exel_convert(file)
         city_name = exel_converter["data"]["city"]
+        print("city_name", city_name)
         super_admin_id= UUID(get_user_id_from_token(editors["token"]))
+        print("super_admin_id hier ", super_admin_id)
         city = await SuperAdminOperations(db_session).create_city(super_admin_id,city_name)
+
+        print("city", city.id)
         
         for streeet in exel_converter["data"]["streets"]:
             street = await SuperAdminOperations(db_session).create_street(streeet["street"])

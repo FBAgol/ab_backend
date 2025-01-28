@@ -48,8 +48,7 @@ async def init_tables():
     else:
         logger.info(f"Ordner '{images_directory}' existiert bereits.")
 
-# Binden des zentralen Routers an die Hauptanwendung
-app.include_router(main_router, prefix="/api/v1")
+
 
 # Deine bestehenden Router-Registrierungen und Logik
 # z. B. app.include_router(companyeditor_router)
@@ -98,7 +97,7 @@ async def connect(sid, environ, auth=None):
                 print(f"User {editor_id} connected")
                 await sio.save_session(sid, {'editor_id': str(editor_id)})
                 await sio.enter_room(sid, str(editor_id))  # Editor-ID als Room-ID nutzen
-                await sio.emit('notification', {'msg': 'Connected to notifications'}, to=sid)
+               # await sio.emit('notification', {'msg': 'Connected to notifications'}, to=sid)
             else:
                 print(f"Editor mit ID {editor_id} wurde nicht gefunden.")
         except Exception as e:
@@ -115,4 +114,6 @@ async def disconnect(sid):
         await sio.leave_room(sid, session['editor_id'])
 
 # Hauptanwendung
+# Binden des zentralen Routers an die Hauptanwendung
+app.include_router(main_router, prefix="/api/v1")
 app.mount("/", socket_app)  # WebSocket-App mounten
