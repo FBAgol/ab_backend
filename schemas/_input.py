@@ -72,3 +72,12 @@ class UpdateObjectStatusRequest(BaseModel):
     objectName: str
     class Config:
         orm_mode = True
+
+
+class EmailRequest(BaseModel):
+    from_email: str
+    to_email: str
+    subject: str
+    body: str
+    class Config:
+        orm_mode = True

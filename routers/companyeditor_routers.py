@@ -172,7 +172,6 @@ async def update_img_coordinate(
     update_img_request: UpdateImgRequest= Body(...)
 ):
     try:
-        print("update_img_request",update_img_request)
         result = await CompanyEditorOperations(db_session).update_coord_img(Authorization, update_img_request.oldOriginalImgUrl, update_img_request.oldAnalyzedImgUrl)
         return result
     except Exception as e:

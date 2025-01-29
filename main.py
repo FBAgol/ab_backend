@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from db.engine import Base, engine
 from db.models import Telekom_Editor    
 from cors_config import add_cors_middleware
-from routers import superadmin_router, companyeditor_router, telekomeditor_router
+from routers import superadmin_router, companyeditor_router, telekomeditor_router, email_router
 from jwt_utils import get_user_id_from_token
 
 app = FastAPI()
@@ -35,6 +35,7 @@ main_router = APIRouter()
 main_router.include_router(superadmin_router, prefix="/superadmin", tags=["superadmin"])
 main_router.include_router(companyeditor_router, prefix="/companyeditor", tags=["companyeditor"])
 main_router.include_router(telekomeditor_router, prefix="/telekomeditor", tags=["telekomeditor"])
+main_router.include_router(email_router, prefix="/email", tags=["email"])
 
 @app.on_event("startup")
 async def init_tables():

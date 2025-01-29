@@ -241,11 +241,10 @@ class CompanyEditorOperations:
         
     async def update_coord_img(self, token: str, oldOriginalImgUrl: str, oldAnalyseImgUrl: str) -> dict:
         editor_id = UUID(get_user_id_from_token(token))
-        query_editor = sa.select(Company_Editor).where(Company_Editor.id == editor_id)
+        query_editor = sa.select(Company_Editor).options(selectinload(Company_Editor.projects), selectinload(Company_Editor.company)).where(Company_Editor.id == editor_id)
         query_coord = sa.select(Coordinate).where(Coordinate.original_image_url == oldOriginalImgUrl, Coordinate.analysed_image_url == oldAnalyseImgUrl)
         update_coord_query = sa.update(Coordinate).where(Coordinate.original_image_url == oldOriginalImgUrl, Coordinate.analysed_image_url == oldAnalyseImgUrl).values(original_image_url='', analysed_image_url='', result_materiallist=[])
-        
-        
+
         async with self.db_session as session:
             editor = await session.scalar(query_editor)
             coord= await session.scalar(query_coord)
@@ -260,11 +259,13 @@ class CompanyEditorOperations:
                 # Alte Bilder löschen, wenn sie existieren
                 if oldOriginalImgUrl:
                     old_original_path = os.path.join(ORIGINAL_DIR, os.path.basename(oldOriginalImgUrl))
+                    print("old_original_path: ",old_original_path)
                     if os.path.exists(old_original_path):
                         os.remove(old_original_path)
 
                 if oldAnalyseImgUrl:
                     old_analysed_path = os.path.join(ANALYSE_DIR, os.path.basename(oldAnalyseImgUrl))
+                    print("old_analysed_path: ",old_analysed_path)
                     if os.path.exists(old_analysed_path):
                         os.remove(old_analysed_path)
 
