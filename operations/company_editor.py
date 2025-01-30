@@ -103,7 +103,7 @@ class CompanyEditorOperations:
                                         {   "zone_id": coord.zone_id,
                                             "latitude": coord.latitude,
                                             "longitude": coord.longitude,
-                                            "target_material": coord.result_materiallist,
+                                            "target_material": coord.target_material,
                                             "original_image_url": coord.original_image_url,
                                             "analysed_image_url": coord.analysed_image_url,
                                         }
