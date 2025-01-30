@@ -21,17 +21,21 @@ async def register_company_Editor(
 )-> dict | str:
     try:
         editor = await CompanyEditorOperations(db_session).registration(company_editor.secret_key, company_editor.email, company_editor.password, company_editor.role)
-        
+        print("editor info ",editor)
         if isinstance(editor, str): 
             return editor
-        access_token = create_access_token(data={"sub": str(editor["id"])}, expires_delta=timedelta(days=1)) 
-        refresh_token = create_refresh_token(data={"sub": str(editor["id"])}, expires_delta=timedelta(days=7))
+        access_token = create_access_token(data={"sub": str(editor["editor_info"]["id"])}, expires_delta=timedelta(days=1)) 
+        refresh_token = create_refresh_token(data={"sub": str(editor["editor_info"]["id"])}, expires_delta=timedelta(days=7))
+        print("info ",access_token)
+
         
         return {
             "access_token": access_token,
             "refresh_token": refresh_token,
             "token_type": "bearer",  
             "status": "registaion successful",
+            "projects": editor["projects"],
+            "company_name": editor["company_name"] 
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
@@ -47,6 +51,15 @@ async def register_company_Editor(
 }
 """
 
+"""
+
+{
+    "secret_key":"string456",
+    "email":"alex@gmail.de",
+    "password":"Alext(12345)",
+    "role":1
+}
+"""
 
 
 @companyeditor_router.post("/login")

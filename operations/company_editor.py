@@ -31,7 +31,7 @@ class CompanyEditorOperations:
 
     
     async def registration(self, secret_key: str, email: str, password: str, role:int) -> Company_Editor| str:
-        query = sa.select(Company_Editor).where(Company_Editor.editor_email == email)
+        query = sa.select(Company_Editor).options(selectinload(Company_Editor.projects), joinedload(Company_Editor.company)).where(Company_Editor.editor_email == email)
         
         async with self.db_session as session:
             try:
@@ -48,7 +48,12 @@ class CompanyEditorOperations:
                 await session.execute(updated_editor)
                 await session.commit()
                 editor.password = updated_password
-                return to_dict(editor)
+                list_projecnamen= [project.project_name for project in editor.projects]
+                return {
+                            "company_name": editor.company.company_name,
+                            "projects": list_projecnamen,
+                            "editor_info": to_dict(editor)
+                        }
 
             except Exception as e:
                 raise Exception(f"Unexpected error occurred: {e}")

@@ -20,7 +20,7 @@ class TelekomEditorOperations:
 
     
     async def registration(self, secret_key: str, email: str, password: str, role:int) -> Telekom_Editor| str:
-        query = sa.select(Telekom_Editor).where(Telekom_Editor.email == email)
+        query = sa.select(Telekom_Editor).options(selectinload(Telekom_Editor.projects), joinedload(Telekom_Editor.super_admin), selectinload(Telekom_Editor.notifications)).where(Telekom_Editor.email == email)
         
         async with self.db_session as session:
             try:
@@ -37,7 +37,17 @@ class TelekomEditorOperations:
                 await session.execute(updated_editor)
                 await session.commit()
                 editor.password = updated_password
-                return to_dict(editor)
+
+                notification_query= sa.select(Notification).options(selectinload(Notification.telekom_editor), selectinload(Notification.coordinate)).where(Notification.telekom_editor_id==editor.id)
+                notifications= await session.scalars(notification_query)
+                list_notifications= [notification.message for notification in notifications]
+                list_projects= [project.project_name for project in editor.projects]
+
+                return {
+                            "projects": list_projects,
+                            "notifications": list_notifications,
+                            "editor_id":to_dict(editor),
+                        }
 
             except Exception as e:
                 raise Exception(f"Unexpected error occurred: {e}")
