@@ -28,6 +28,8 @@ services:
         condition: service_healthy
     env_file:
       - .env
+    volumes:
+      - ./images:/app/images
 
 volumes:
   mysql_data:
